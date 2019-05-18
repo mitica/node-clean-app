@@ -1,0 +1,34 @@
+{
+  "name": "ts-node-clean-app",
+  "version": "0.0.1",
+  "description": "Base Nodejs/TypeScript Clean Arhitecture application",
+  "scripts": {
+    "pretest": "npm run clean && npm run tsc",
+    "test": "ava --no-cache --verbose lib/**/*.test.js",
+    "posttest": "npm run clean-test-code",
+    "tsc": "tsc",
+    "tscw": "tsc -w",
+    "preversion": "npm run tsc",
+    "postversion": "git push --follow-tags"
+  },
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mitica/ts-node-clean-app.git"
+  },
+  "keywords": [
+    "clean-app",
+    "ts-node-clean-app"
+  ],
+  "author": "Dumitru Cantea",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mitica/ts-node-clean-app/issues"
+  },
+  "homepage": "https://github.com/mitica/ts-node-clean-app#readme",
+  "devDependencies": {
+
+  }
+}
