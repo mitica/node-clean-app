@@ -12,7 +12,7 @@ export abstract class BaseUseCase<TInput, TOutput>
     // pre code: logging, validation, events
 
     const output = await this.innerExecute(input);
-    
+
     // post code
 
     return output;
