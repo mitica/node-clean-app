@@ -1,5 +1,5 @@
 import { EntityId, Entity } from "../entities/base";
-import { OptionalKeys, ArrayKeys } from "../../types";
+import { OptionalKeys, ArrayKeys } from "../types";
 
 export interface RepositoryUpdateData<
   TEntity extends Entity,
@@ -8,23 +8,23 @@ export interface RepositoryUpdateData<
   /**
    * Entity id to updated.
    */
-  id: EntityId;
+  readonly id: EntityId;
   /**
    * Entity fields to set.
    */
-  set?: Partial<Pick<TEntity, KSet>>;
+  readonly set?: Readonly<Partial<Pick<TEntity, KSet>>>;
   /**
    * Add items to array fields.
    */
-  add?: Pick<TEntity, ArrayKeys<TEntity>>;
+  readonly add?: Readonly<Pick<TEntity, ArrayKeys<TEntity>>>;
   /**
    * Remove items from array fields.
    */
-  remove?: Pick<TEntity, ArrayKeys<TEntity>>;
+  readonly remove?: Readonly<Pick<TEntity, ArrayKeys<TEntity>>>;
   /**
    * Entity fields to delete.
    */
-  delete?: (OptionalKeys<TEntity>)[];
+  readonly delete?: ReadonlyArray<(OptionalKeys<TEntity>)>;
 };
 
 export interface Repository<
@@ -42,7 +42,7 @@ export interface Repository<
    * Create a new entity.
    * @param data Entity data
    */
-  create(data: TCreate): Promise<TEntity>;
+  create(data: Readonly<TCreate>): Promise<TEntity>;
 
   /**
    * Update an existing entity.

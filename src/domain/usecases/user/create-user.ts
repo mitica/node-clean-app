@@ -3,19 +3,19 @@ import { BaseUseCase } from "../usecase";
 import { UserRepository } from "../../repositories/user-repository";
 
 /**
- * Create system user use case.
+ * Create user use case.
  */
 export class CreateUserUseCase<
   TEntity extends User = User,
-  TCreate extends UserCreate = UserCreate
-> extends BaseUseCase<TCreate, TEntity> {
-  protected readonly userRepository: UserRepository<TEntity, TCreate>;
-  constructor(userRepository: UserRepository<TEntity, TCreate>) {
+  TInput extends UserCreate = UserCreate
+> extends BaseUseCase<TInput, TEntity> {
+  protected readonly userRepository: UserRepository<TEntity, TInput>;
+  constructor(userRepository: UserRepository<TEntity, TInput>) {
     super();
     this.userRepository = userRepository;
   }
 
-  protected innerExecute(input: TCreate): Promise<TEntity> {
+  protected innerExecute(input: Readonly<TInput>): Promise<TEntity> {
     return this.userRepository.create(input);
   }
 }
