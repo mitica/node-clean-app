@@ -1,19 +1,19 @@
-import { IBaseEntity } from "./base";
+import { Entity } from "./base";
 
 export type UserRole = "user" | "owner" | "admin" | "moderator";
 
-export interface IUser extends IBaseEntity {
-  email: string
-  firstName?: string
-  lastName?: string
-  roles: UserRole[]
+export interface User extends Entity {
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  roles: UserRole[];
 }
 
 export type UserReadonlyKeys = "id" | "createdAt";
-export type UserWritableKeys = Exclude<keyof IUser, UserReadonlyKeys>;
+export type UserWritableKeys = Exclude<keyof User, UserReadonlyKeys>;
 
-export interface IUserCreate extends Partial<IBaseEntity> {
-  email: string
-  firstName?: string
-  lastName?: string
+export interface UserCreate extends Partial<Entity> {
+  email: string;
+  firstName?: string;
+  lastName?: string;
 }

@@ -1,74 +1,81 @@
-import { BaseEntityId, IBaseEntity } from "../entities/base";
+import { EntityId, Entity } from "../entities/base";
 import { OptionalKeys, ArrayKeys } from "../../types";
 
-export type RepositoryUpdateData<T extends IBaseEntity, KSet extends keyof T = never> = {
+export interface RepositoryUpdateData<
+  TEntity extends Entity,
+  KSet extends keyof TEntity = never
+> {
   /**
    * Entity id to updated.
    */
-  id: BaseEntityId
+  id: EntityId;
   /**
    * Entity fields to set.
    */
-  set?: Partial<Pick<T, KSet>>
+  set?: Partial<Pick<TEntity, KSet>>;
   /**
    * Add items to array fields.
    */
-  add?: Pick<T, ArrayKeys<T>>
+  add?: Pick<TEntity, ArrayKeys<TEntity>>;
   /**
    * Remove items from array fields.
    */
-  remove?: Pick<T, ArrayKeys<T>>
+  remove?: Pick<TEntity, ArrayKeys<TEntity>>;
   /**
    * Entity fields to delete.
    */
-  delete?: (OptionalKeys<T>)[]
-}
+  delete?: (OptionalKeys<TEntity>)[];
+};
 
-export interface IRepository<TEntity extends IBaseEntity, TCreate, KSet extends keyof TEntity = never> {
+export interface Repository<
+  TEntity extends Entity,
+  TCreate,
+  KSet extends keyof TEntity = never
+> {
   /**
    * Delete an entity by id.
    * @param id Entity id to be deleted
    */
-  delete(id: BaseEntityId): Promise<boolean>
+  delete(id: EntityId): Promise<boolean>;
 
   /**
    * Create a new entity.
    * @param data Entity data
    */
-  create(data: TCreate): Promise<TEntity>
+  create(data: TCreate): Promise<TEntity>;
 
   /**
    * Update an existing entity.
    * @param data Entity update data
    */
-  update(data: RepositoryUpdateData<TEntity, KSet>): Promise<TEntity>
+  update(data: RepositoryUpdateData<TEntity, KSet>): Promise<TEntity>;
 
   /**
    * Get an entity by id.
    * @param id Entity id
    */
-  getById(id: BaseEntityId): Promise<TEntity | null>
+  getById(id: EntityId): Promise<TEntity | null>;
 
   /**
    * Get entities by ids
    * @param ids Entities ids
    */
-  getByIds(ids: BaseEntityId[]): Promise<TEntity[]>
+  getByIds(ids: EntityId[]): Promise<TEntity[]>;
 
   /**
    * Check if an entity exists.
    * @param id Entity id
    */
-  exists(id: BaseEntityId): Promise<boolean>
+  exists(id: EntityId): Promise<boolean>;
 
   /**
    * Deletes all tables or files associated with this repository.
    * Useful in tests.
    */
-  deleteStorage(): Promise<void>
+  deleteStorage(): Promise<void>;
 
-  /** Creates tables or files associated with this repository 
+  /** Creates tables or files associated with this repository
    * Useful in tests.
    */
-  createStorage(): Promise<void>
+  createStorage(): Promise<void>;
 }
