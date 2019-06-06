@@ -6,7 +6,7 @@ export interface RepositoryUpdateData<
   KSet extends keyof TEntity = never
 > {
   /**
-   * Entity id to updated.
+   * Entity id to update.
    */
   readonly id: EntityId;
   /**
@@ -24,7 +24,7 @@ export interface RepositoryUpdateData<
   /**
    * Entity fields to delete.
    */
-  readonly delete?: ReadonlyArray<(OptionalKeys<TEntity>)>;
+  readonly delete?: ReadonlyArray<OptionalKeys<TEntity>>;
 };
 
 export interface Repository<

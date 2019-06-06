@@ -1,6 +1,6 @@
-import { User, UserCreate } from "../../entities/user";
+import { User, UserCreate } from "../../entities/user/user";
 import { BaseUseCase } from "../usecase";
-import { UserRepository } from "../../repositories/user-repository";
+import { UserRepository } from "../../repositories/user/user-repository";
 
 /**
  * Create user use case.
