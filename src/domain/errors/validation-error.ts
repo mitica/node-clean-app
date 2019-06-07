@@ -10,3 +10,14 @@ export class ValidationError extends BaseError {
     super(CODE, message);
   }
 }
+
+export class EmailExistsError extends ValidationError {
+  constructor(email: string) {
+    super(
+      `A user with email ${email} already exists.`,
+      email,
+      undefined,
+      "E2001"
+    );
+  }
+}

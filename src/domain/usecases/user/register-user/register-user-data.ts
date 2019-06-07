@@ -4,6 +4,7 @@ import { UserCreateDataSchemaFields } from "../../../repositories/user/user-crea
 
 export type RegisterUserData = {
   email: string;
+  password: string;
   firstName?: string;
   lastName?: string;
 };
@@ -18,6 +19,7 @@ export class RegisterUserDataValidator extends YupDataValidator<
 
 const schema = yup.object().shape({
   email: UserCreateDataSchemaFields.email,
+  password: UserCreateDataSchemaFields.password,
   firstName: UserCreateDataSchemaFields.firstName,
   lastName: UserCreateDataSchemaFields.lastName
 });

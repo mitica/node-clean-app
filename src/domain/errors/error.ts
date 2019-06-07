@@ -4,8 +4,6 @@ const errorCodeSymbol = Symbol("error code");
  */
 const ERROR_CODE_REG = /^E[1-9]\d{3}$/;
 
-export type ErrorCode = string;
-
 /**
  * A system base error. All errors must extend this one.
  * It could be named {MyAppName}Error.
