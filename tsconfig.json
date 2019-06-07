@@ -1,4 +1,5 @@
 {
+  "compileOnSave": false,
   "compilerOptions": {
     "module": "commonjs",
     "rootDir": "./src",
@@ -6,12 +7,13 @@
     "noImplicitAny": true,
     "removeComments": true,
     "preserveConstEnums": true,
-    "sourceMap": true,
+    "sourceMap": false,
     "moduleResolution": "node",
     "declaration": false,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "allowJs": false,
+    "noEmit": true,
     "strict": true
   },
   "formatCodeOptions": {

@@ -1,9 +1,9 @@
-import { EntityId, Entity } from "../entities/base";
+import { EntityId, EntityData, BaseEntity } from "../entities/base";
 import { OptionalKeys, ArrayKeys } from "../types";
 
 export interface RepositoryUpdateData<
-  TEntity extends Entity,
-  KSet extends keyof TEntity = never
+  TData extends EntityData,
+  KSet extends keyof TData = never
 > {
   /**
    * Entity id to update.
@@ -12,25 +12,26 @@ export interface RepositoryUpdateData<
   /**
    * Entity fields to set.
    */
-  readonly set?: Readonly<Partial<Pick<TEntity, KSet>>>;
+  readonly set?: Readonly<Partial<Pick<TData, KSet>>>;
   /**
    * Add items to array fields.
    */
-  readonly add?: Readonly<Pick<TEntity, ArrayKeys<TEntity>>>;
+  readonly add?: Readonly<Pick<TData, ArrayKeys<TData>>>;
   /**
    * Remove items from array fields.
    */
-  readonly remove?: Readonly<Pick<TEntity, ArrayKeys<TEntity>>>;
+  readonly remove?: Readonly<Pick<TData, ArrayKeys<TData>>>;
   /**
    * Entity fields to delete.
    */
-  readonly delete?: ReadonlyArray<OptionalKeys<TEntity>>;
-};
+  readonly delete?: ReadonlyArray<OptionalKeys<TData>>;
+}
 
 export interface Repository<
-  TEntity extends Entity,
+  TData extends EntityData,
+  TEntity extends BaseEntity<TData>,
   TCreate,
-  KSet extends keyof TEntity = never
+  KSet extends keyof TData = never
 > {
   /**
    * Delete an entity by id.
@@ -48,7 +49,7 @@ export interface Repository<
    * Update an existing entity.
    * @param data Entity update data
    */
-  update(data: RepositoryUpdateData<TEntity, KSet>): Promise<TEntity>;
+  update(data: RepositoryUpdateData<TData, KSet>): Promise<TEntity>;
 
   /**
    * Get an entity by id.

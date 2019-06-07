@@ -1,11 +1,12 @@
-import { User, UserWritableKeys } from "../../entities/user/user";
+import { User, UserWritableKeys, UserData } from "../../entities/user/user";
 import { Repository } from "../repository";
-import { UserCreateInput } from "./user-create-input";
+import { UserCreateData } from "./user-create-data";
 
 export interface UserRepository<
-  TEntity extends User = User,
-  TCreateInput extends UserCreateInput = UserCreateInput,
+  TData extends UserData = UserData,
+  TEntity extends User<TData> = User<TData>,
+  TCreateData extends UserCreateData = UserCreateData,
   KSet extends UserWritableKeys = UserWritableKeys
-> extends Repository<TEntity, TCreateInput, KSet> {
+> extends Repository<TData, TEntity, TCreateData, KSet> {
   getByEmail(email: string): TEntity | null;
 }
