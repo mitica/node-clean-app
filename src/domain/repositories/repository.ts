@@ -37,7 +37,7 @@ export interface Repository<
    * Delete an entity by id.
    * @param id Entity id to be deleted
    */
-  delete(id: EntityId): Promise<boolean>;
+  delete(id: EntityId): Promise<TEntity | null>;
 
   /**
    * Create a new entity.
