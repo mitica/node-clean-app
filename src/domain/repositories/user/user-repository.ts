@@ -9,4 +9,5 @@ export interface UserRepository<
   KSet extends UserWritableKeys = UserWritableKeys
 > extends Repository<TData, TEntity, TCreateData, KSet> {
   getByEmail(email: string): Promise<TEntity | null>;
+  login(email: string, password: string): Promise<TEntity | null>;
 }
