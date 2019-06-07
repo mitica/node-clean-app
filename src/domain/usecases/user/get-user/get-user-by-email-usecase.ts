@@ -8,7 +8,7 @@ export type GetUserByEmailInput = {
 };
 
 /**
- * Create user use case.
+ * Get a user by email.
  */
 export class GetUserByEmailUseCase extends BaseUseCase<
   GetUserByEmailInput,

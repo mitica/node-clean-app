@@ -2,14 +2,14 @@ import * as yup from "yup";
 import { YupDataValidator } from "../../../validators/yup-data-validator";
 import { UserCreateDataSchemaFields } from "../../../repositories/user/user-create-data";
 
-export type CreateUserInput = {
+export type RegisterUserData = {
   email: string;
   firstName?: string;
   lastName?: string;
 };
 
-export class CreateUserInputValidator extends YupDataValidator<
-  CreateUserInput
+export class RegisterUserDataValidator extends YupDataValidator<
+  RegisterUserData
 > {
   constructor() {
     super(schema, { stripUnknown: true });

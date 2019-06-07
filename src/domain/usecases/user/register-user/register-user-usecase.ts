@@ -1,18 +1,18 @@
 import { User } from "../../../entities/user/user";
 import { BaseUseCase } from "../../usecase";
 import { UserRepository } from "../../../repositories/user/user-repository";
-import { CreateUserInput, CreateUserInputValidator } from "./create-user-input";
+import { RegisterUserData, RegisterUserDataValidator } from "./register-user-data";
 
 /**
  * Create user use case.
  */
-export class CreateUserUseCase extends BaseUseCase<CreateUserInput, User> {
+export class RegisterUserUseCase extends BaseUseCase<RegisterUserData, User> {
   constructor(protected readonly userRepository: UserRepository) {
-    super(new CreateUserInputValidator());
+    super(new RegisterUserDataValidator());
     this.userRepository = userRepository;
   }
 
-  protected innerExecute(input: Readonly<CreateUserInput>): Promise<User> {
+  protected innerExecute(input: Readonly<RegisterUserData>): Promise<User> {
     return this.userRepository.create(input);
   }
 }
