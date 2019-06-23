@@ -57,4 +57,25 @@ export class User<TData extends UserData = UserData> extends BaseEntity<TData>
   set role(value: UserRole) {
     this._data.role = value;
   }
+
+  static getFields() {
+    return Object.keys(User.jsonSchema.properties);
+  }
+
+  static get jsonSchema() {
+    return {
+      type: "object",
+      required: ["id", "createdAt", "updatedAt", "email", "role"],
+      properties: {
+        id: { type: "string", maxLength: 40 },
+        createdAt: { type: "string", format: "date-time" },
+        updatedAt: { type: "string", format: "date-time" },
+        email: { type: "string", format: "email" },
+        password: { type: "string", maxLength: 50, minLength: 6 },
+        firstName: { type: "string", maxLength: 50 },
+        lastName: { type: "string", maxLength: 50 },
+        role: { type: "string", enum: ["user", "owner", "admin", "moderator"] }
+      }
+    };
+  }
 }

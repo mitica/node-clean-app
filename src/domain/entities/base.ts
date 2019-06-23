@@ -1,4 +1,9 @@
 /**
+ * Entity it type.
+ */
+export type EntityId = string;
+
+/**
  * Root entity data.
  */
 export interface EntityData {
@@ -42,8 +47,3 @@ export abstract class BaseEntity<TData extends EntityData = EntityData>
     return this._data;
   }
 }
-
-/**
- * Entity it type.
- */
-export type EntityId = string;
