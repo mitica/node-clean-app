@@ -16,10 +16,6 @@
     "noEmit": true,
     "strict": true
   },
-  "formatCodeOptions": {
-    "indentSize": 2,
-    "tabSize": 2
-  },
   "include": [
     "src/**/*.ts"
   ]
