@@ -1,4 +1,4 @@
-import { BaseEntity, EntityData } from "../base";
+import { BaseEntity, EntityData, EntityType } from "../base";
 
 export type UserRole = "user" | "owner" | "admin" | "moderator";
 
@@ -14,6 +14,13 @@ export type UserWritableKeys = Exclude<keyof UserData, UserReadonlyKeys>;
 
 export class User<TData extends UserData = UserData> extends BaseEntity<TData>
   implements UserData {
+  constructor(data: TData) {
+    super(User.EntityType, data);
+  }
+  static get EntityType(): EntityType {
+    return "user";
+  }
+
   get email() {
     return this._data.email;
   }
@@ -27,6 +34,8 @@ export class User<TData extends UserData = UserData> extends BaseEntity<TData>
   set firstName(value: string | undefined) {
     if (value === undefined) {
       delete this._data.firstName;
+    } else {
+      this._data.firstName = value;
     }
   }
 
@@ -36,6 +45,8 @@ export class User<TData extends UserData = UserData> extends BaseEntity<TData>
   set lastName(value: string | undefined) {
     if (value === undefined) {
       delete this._data.lastName;
+    } else {
+      this._data.lastName = value;
     }
   }
 

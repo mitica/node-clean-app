@@ -1,17 +1,17 @@
 import { User } from "../../../entities/user/user";
-import { BaseUseCase } from "../../usecase";
-import { UserRepository } from "../../../repositories/user/user-repository";
+import { ContextUseCase } from "../../context-usecase";
+import { DomainContext } from "../../../context";
 
 /**
  * Get a user by email.
  */
-export class GetUserByEmailUseCase extends BaseUseCase<string, User | null> {
-  constructor(protected readonly userRepository: UserRepository) {
-    super();
-    this.userRepository = userRepository;
-  }
-
-  protected innerExecute(email: string) {
-    return this.userRepository.getByEmail(email);
+export class GetUserByEmailUseCase<
+  TContext extends DomainContext = DomainContext
+> extends ContextUseCase<string, User | null, TContext> {
+  protected innerExecute(
+    input: string,
+    context: Readonly<TContext>
+  ): Promise<User | null> {
+    return context.repo.user.getByEmail(input);
   }
 }

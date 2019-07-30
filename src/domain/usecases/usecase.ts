@@ -1,6 +1,20 @@
+import { EventEmitter, BaseEventEmitter } from "../event-emitter";
 import { DataValidator } from "../validators/data-validator";
 
-export interface UseCase<TInput, TOutput, TContext = {}> {
+export interface UseCaseEvents<TInput, TOutput> {
+  preExecute: [Readonly<TInput>];
+  postExecute: [Readonly<TOutput>, Readonly<TInput>];
+}
+
+export interface UseCase<
+  TInput,
+  TOutput,
+  TEvents extends UseCaseEvents<TInput, TOutput> = UseCaseEvents<
+    TInput,
+    TOutput
+  >,
+  TContext = undefined
+> extends EventEmitter<TEvents> {
   execute(
     input: Readonly<TInput>,
     context: Readonly<TContext>
@@ -11,29 +25,45 @@ export interface UseCase<TInput, TOutput, TContext = {}> {
  * Base use case. All use cases should extends BaseUseCase.
  * All business logic should be defined in use cases.
  */
-export abstract class BaseUseCase<TInput, TOutput, TContext = {}>
-  implements UseCase<TInput, TOutput, TContext> {
+export abstract class BaseUseCase<
+  TInput,
+  TOutput,
+  TEvents extends UseCaseEvents<TInput, TOutput> = UseCaseEvents<
+    TInput,
+    TOutput
+  >,
+  TContext = undefined
+> extends BaseEventEmitter<TEvents>
+  implements UseCase<TInput, TOutput, TEvents, TContext> {
   constructor(
     private inputValidator?: DataValidator<TInput, TInput, TContext>
-  ) {}
+  ) {
+    super();
+  }
 
   public async execute(
     input: Readonly<TInput>,
-    context?: Readonly<TContext>
+    context: Readonly<TContext>
   ): Promise<TOutput> {
-    // pre code: logging, validation, events
+    await this.emit("preExecute", [input]);
+
     const validatedInput = await this.validateInput(input, context);
 
     const output = await this.innerExecute(validatedInput, context);
 
-    // post code
+    await this.emit("postExecute", [output, input]);
 
     return output;
   }
 
+  /**
+   * Validate input.
+   * @param input Input data
+   * @param context Context
+   */
   protected async validateInput(
     input: Readonly<TInput>,
-    context?: Readonly<TContext>
+    context: Readonly<TContext>
   ) {
     if (this.inputValidator) {
       return this.inputValidator.validate(input, context);
@@ -41,8 +71,13 @@ export abstract class BaseUseCase<TInput, TOutput, TContext = {}>
     return input;
   }
 
+  /**
+   * Every use case should implement this method.
+   * @param input Input data
+   * @param context Context
+   */
   protected abstract innerExecute(
     input: Readonly<TInput>,
-    context?: Readonly<TContext>
+    context: Readonly<TContext>
   ): Promise<TOutput>;
 }

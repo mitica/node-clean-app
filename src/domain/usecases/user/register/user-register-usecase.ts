@@ -1,23 +1,18 @@
 import { User } from "../../../entities/user/user";
-import { BaseUseCase } from "../../usecase";
-import { UserRepository } from "../../../repositories/user/user-repository";
-import {
-  UserRegisterInput,
-  UserRegisterInputValidator
-} from "./user-register-input";
+import { UserRegisterInput } from "./user-register-input";
+import { DomainContext } from "../../../context";
+import { ContextUseCase } from "../../context-usecase";
 
 /**
  * Register user use case.
  */
-export class UserRegisterUseCase extends BaseUseCase<UserRegisterInput, User> {
-  constructor(protected readonly userRepository: UserRepository) {
-    super(new UserRegisterInputValidator(userRepository));
-    this.userRepository = userRepository;
-  }
-
+export class UserRegisterUseCase<
+  TContext extends DomainContext = DomainContext
+> extends ContextUseCase<UserRegisterInput, User, TContext> {
   protected async innerExecute(
-    input: Readonly<UserRegisterInput>
+    input: Readonly<UserRegisterInput>,
+    context: Readonly<TContext>
   ): Promise<User> {
-    return this.userRepository.create(input);
+    return context.repo.user.create(input);
   }
 }

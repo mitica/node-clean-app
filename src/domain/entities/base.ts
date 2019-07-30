@@ -12,15 +12,19 @@ export interface EntityData {
   updatedAt: Date;
 }
 
+export type EntityType = "user";
+
 /**
  * Root entity interface.
  * All entities will extend it.
  */
-export abstract class BaseEntity<TData extends EntityData = EntityData>
-  implements EntityData {
+export abstract class BaseEntity<
+  TData extends EntityData = EntityData,
+  TType extends EntityType = EntityType
+> implements EntityData {
   protected _data: TData;
 
-  constructor(data: TData) {
+  constructor(readonly entityType: TType, data: TData) {
     this._data = data;
   }
 
