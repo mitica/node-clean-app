@@ -1,12 +1,11 @@
-import { EventEmitter } from "../event-emitter";
-import { UserRegisterUseCase } from "./user/register/user-register-usecase";
+import { BaseEventEmitter } from "../event-emitter";
 import { DomainContext } from "../context";
-import { UserLoginUseCase } from "./user/login/user-login-usecase";
+import { UserUseCases } from "./user/user-usecases";
 
-export interface UseCaseManager<
-  TContext extends DomainContext = DomainContext,
-  EventDataMap extends {} = {}
-> extends EventEmitter<EventDataMap> {
-  readonly userRegister: UserRegisterUseCase<TContext>;
-  readonly userLogin: UserLoginUseCase<TContext>;
+export class UseCaseManager<
+  TContext extends DomainContext = DomainContext
+> extends BaseEventEmitter<{}> {
+  constructor(readonly user: UserUseCases<TContext>) {
+    super();
+  }
 }
