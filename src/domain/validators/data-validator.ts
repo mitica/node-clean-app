@@ -1,4 +1,4 @@
-export interface DataValidator<
+export interface IDataValidator<
   TInput,
   TOutput = TInput,
   TContext = {}

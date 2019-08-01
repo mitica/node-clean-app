@@ -1,17 +1,17 @@
-import { RepositoryManager } from "./repositories/repository-manager";
+import { IRepositoryManager } from "./repositories/repository-manager";
 import { UseCaseManager } from "./usecases/usecase-manager";
 import { User } from "./entities/user/user";
-import { DomainConfig } from "./config";
+import { IDomainConfig } from "./config";
 
-export interface DomainContext<TConfig extends DomainConfig = DomainConfig> {
+export interface IDomainContext<TConfig extends IDomainConfig = IDomainConfig> {
   config: Readonly<TConfig>;
-  repo: Readonly<RepositoryManager>;
+  repo: Readonly<IRepositoryManager>;
   usecase: Readonly<UseCaseManager>;
 }
 
-export interface UserDomainContext<
+export interface IUserDomainContext<
   TUser extends User = User,
-  TConfig extends DomainConfig = DomainConfig
-> extends DomainContext<TConfig> {
+  TConfig extends IDomainConfig = IDomainConfig
+> extends IDomainContext<TConfig> {
   user: Readonly<TUser>;
 }

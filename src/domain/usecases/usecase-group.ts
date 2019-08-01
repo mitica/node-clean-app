@@ -1,19 +1,19 @@
 import { BaseEventEmitter } from "../event-emitter";
-import { UseCaseEvents, UseCase } from "./usecase";
+import { IUseCaseEvents, IUseCase } from "./usecase";
 
-export interface UseCaseGroupEvents {
-  preExecute: { usecase: UseCase; input: Readonly<any> };
+export interface IUseCaseGroupEvents {
+  preExecute: { usecase: IUseCase; input: Readonly<any> };
   postExecute: {
-    usecase: UseCase;
+    usecase: IUseCase;
     input: Readonly<any>;
     output: Readonly<any>;
   };
 }
 
 export class UseCaseGroup<
-  TEvents extends UseCaseGroupEvents = UseCaseGroupEvents
+  TEvents extends IUseCaseGroupEvents = IUseCaseGroupEvents
 > extends BaseEventEmitter<TEvents> {
-  constructor(usecases: UseCase<UseCaseEvents>[]) {
+  constructor(usecases: IUseCase<IUseCaseEvents>[]) {
     super();
     usecases.forEach(item => {
       item.on("preExecute", data =>

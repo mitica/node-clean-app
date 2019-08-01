@@ -1,7 +1,7 @@
-import { EventEmitter, BaseEventEmitter } from "../event-emitter";
-import { DataValidator } from "../validators/data-validator";
+import { IEventEmitter, BaseEventEmitter } from "../event-emitter";
+import { IDataValidator } from "../validators/data-validator";
 
-export interface UseCaseEvents<
+export interface IUseCaseEvents<
   TInput extends any = any,
   TOutput extends any = any
 > {
@@ -9,15 +9,15 @@ export interface UseCaseEvents<
   postExecute: { output: Readonly<TOutput>; input: Readonly<TInput> };
 }
 
-export interface UseCase<
+export interface IUseCase<
   TInput = any,
   TOutput = any,
-  TEvents extends UseCaseEvents<TInput, TOutput> = UseCaseEvents<
+  TEvents extends IUseCaseEvents<TInput, TOutput> = IUseCaseEvents<
     TInput,
     TOutput
   >,
   TContext = any
-> extends EventEmitter<TEvents> {
+> extends IEventEmitter<TEvents> {
   execute(
     input: Readonly<TInput>,
     context: Readonly<TContext>
@@ -31,15 +31,15 @@ export interface UseCase<
 export abstract class BaseUseCase<
   TInput,
   TOutput,
-  TEvents extends UseCaseEvents<TInput, TOutput> = UseCaseEvents<
+  TEvents extends IUseCaseEvents<TInput, TOutput> = IUseCaseEvents<
     TInput,
     TOutput
   >,
   TContext = any
 > extends BaseEventEmitter<TEvents>
-  implements UseCase<TInput, TOutput, TEvents, TContext> {
+  implements IUseCase<TInput, TOutput, TEvents, TContext> {
   constructor(
-    private inputValidator?: DataValidator<TInput, TInput, TContext>
+    private inputValidator?: IDataValidator<TInput, TInput, TContext>
   ) {
     super();
   }

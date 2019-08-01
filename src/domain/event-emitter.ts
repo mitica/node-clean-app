@@ -1,42 +1,36 @@
 import * as Emittery from "emittery";
 
-interface Events {
-  [eventName: string]: any;
-}
-
 type UnsubscribeFn = () => void;
 
-export interface EventEmitter<EventDataMap extends Events> {
-  on<Name extends keyof EventDataMap>(
+export interface IEventEmitter<TEvents extends {}> {
+  on<Name extends keyof TEvents>(
     eventName: Name,
-    listener: (eventData: EventDataMap[Name]) => any
+    listener: (eventData: TEvents[Name]) => any
   ): UnsubscribeFn;
 
-  once<Name extends keyof EventDataMap>(
-    eventName: Name
-  ): Promise<EventDataMap[Name]>;
+  once<Name extends keyof TEvents>(eventName: Name): Promise<TEvents[Name]>;
 
-  off<Name extends keyof EventDataMap>(
+  off<Name extends keyof TEvents>(
     eventName: Name,
-    listener: (eventData: EventDataMap[Name]) => any
+    listener: (eventData: TEvents[Name]) => any
   ): void;
 
   onAny(
     listener: (
-      eventName: keyof EventDataMap,
-      eventData?: EventDataMap[keyof EventDataMap]
+      eventName: keyof TEvents,
+      eventData?: TEvents[keyof TEvents]
     ) => any
   ): UnsubscribeFn;
   offAny(
     listener: (
-      eventName: keyof EventDataMap,
-      eventData?: EventDataMap[keyof EventDataMap]
+      eventName: keyof TEvents,
+      eventData?: TEvents[keyof TEvents]
     ) => any
   ): void;
 }
 
-export class BaseEventEmitter<EventDataMap extends Events>
-  implements EventEmitter<EventDataMap> {
+export class BaseEventEmitter<EventDataMap extends {}>
+  implements IEventEmitter<EventDataMap> {
   private _emitter: Emittery.Typed<EventDataMap>;
 
   constructor() {

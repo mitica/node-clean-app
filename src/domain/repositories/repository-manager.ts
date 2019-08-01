@@ -1,16 +1,16 @@
-import { UserRepository } from "./user/user-repository";
-import { EventEmitter } from "../event-emitter";
+import { IUserRepository } from "./user/user-repository";
+import { IEventEmitter } from "../event-emitter";
 import { BaseEntity } from "../entities/base";
 
-export interface RepositoryManagerEvents {
+export interface IRepositoryManagerEvents {
   entityCreated: BaseEntity;
   entityUpdated: BaseEntity;
   entityDeleted: BaseEntity;
 }
 
-export interface RepositoryManager<
-  TUserRepository extends UserRepository = UserRepository,
-  TEvents extends RepositoryManagerEvents = RepositoryManagerEvents
-> extends EventEmitter<TEvents> {
+export interface IRepositoryManager<
+  TUserRepository extends IUserRepository = IUserRepository,
+  TEvents extends IRepositoryManagerEvents = IRepositoryManagerEvents
+> extends IEventEmitter<TEvents> {
   readonly user: TUserRepository;
 }

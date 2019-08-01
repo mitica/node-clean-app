@@ -1,13 +1,13 @@
-import { User, UserWritableKeys, UserData } from "../../entities/user/user";
-import { Repository } from "../repository";
-import { UserCreateData } from "./user-create-data";
+import { User, UserWritableKeys, IUserData } from "../../entities/user/user";
+import { IRepository } from "../repository";
+import { IUserCreateData } from "./user-create-data";
 
-export interface UserRepository<
-  TData extends UserData = UserData,
+export interface IUserRepository<
+  TData extends IUserData = IUserData,
   TEntity extends User<TData> = User<TData>,
-  TCreateData extends UserCreateData = UserCreateData,
+  TCreateData extends IUserCreateData = IUserCreateData,
   KSet extends UserWritableKeys = UserWritableKeys
-> extends Repository<TData, TEntity, TCreateData, KSet> {
+> extends IRepository<TData, TEntity, TCreateData, KSet> {
   getByEmail(email: string): Promise<TEntity | null>;
   login(email: string, password: string): Promise<TEntity | null>;
 }
