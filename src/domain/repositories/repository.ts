@@ -1,9 +1,9 @@
-import { EntityId, IEntityData, BaseEntity } from "../entities/base";
+import { EntityId, EntityData, BaseEntity } from "../entities/base";
 import { OptionalKeys, ArrayKeys } from "../types";
-import { IEventEmitter } from "../event-emitter";
+import { EventEmitter } from "../event-emitter";
 
-export interface IRepositoryUpdateData<
-  TData extends IEntityData,
+export interface RepositoryUpdateData<
+  TData extends EntityData,
   KSet extends keyof TData = never
 > {
   /**
@@ -28,8 +28,8 @@ export interface IRepositoryUpdateData<
   readonly delete?: ReadonlyArray<OptionalKeys<TData>>;
 }
 
-export interface IRepositoryEvents<
-  TData extends IEntityData,
+export interface RepositoryEvents<
+  TData extends EntityData,
   TEntity extends BaseEntity<TData>
 > {
   entityCreated: TEntity;
@@ -37,20 +37,20 @@ export interface IRepositoryEvents<
   entityDeleted: TEntity;
 }
 
-export interface IRepository<
-  TData extends IEntityData,
+export interface Repository<
+  TData extends EntityData,
   TEntity extends BaseEntity<TData>,
   TCreate,
   KSet extends keyof TData = never,
-  TUpdate extends IRepositoryUpdateData<TData, KSet> = IRepositoryUpdateData<
+  TUpdate extends RepositoryUpdateData<TData, KSet> = RepositoryUpdateData<
     TData,
     KSet
   >,
-  TEvents extends IRepositoryEvents<TData, TEntity> = IRepositoryEvents<
+  TEvents extends RepositoryEvents<TData, TEntity> = RepositoryEvents<
     TData,
     TEntity
   >
-> extends IEventEmitter<TEvents> {
+> extends EventEmitter<TEvents> {
   /**
    * Delete an entity by id.
    * @param id Entity id to be deleted

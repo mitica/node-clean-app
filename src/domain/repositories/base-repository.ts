@@ -1,34 +1,34 @@
 import {
-  IRepository,
-  IRepositoryUpdateData,
-  IRepositoryEvents
+  Repository,
+  RepositoryUpdateData,
+  RepositoryEvents
 } from "./repository";
-import { IEntityData, BaseEntity, EntityId } from "../entities/base";
-import { IDataValidator } from "../validators/data-validator";
+import { EntityData, BaseEntity, EntityId } from "../entities/base";
+import { DataValidator } from "../validators/data-validator";
 import { BaseEventEmitter } from "../event-emitter";
 
 /**
  * Base Repository class. All repository should extend this one.
  */
 export abstract class BaseRepository<
-  TData extends IEntityData,
+  TData extends EntityData,
   TEntity extends BaseEntity<TData>,
   TCreate,
   KSet extends keyof TData,
-  TUpdate extends IRepositoryUpdateData<TData, KSet> = IRepositoryUpdateData<
+  TUpdate extends RepositoryUpdateData<TData, KSet> = RepositoryUpdateData<
     TData,
     KSet
   >,
-  Events extends IRepositoryEvents<TData, TEntity> = IRepositoryEvents<
+  Events extends RepositoryEvents<TData, TEntity> = RepositoryEvents<
     TData,
     TEntity
   >
 > extends BaseEventEmitter<Events>
-  implements IRepository<TData, TEntity, TCreate, KSet, TUpdate, Events> {
+  implements Repository<TData, TEntity, TCreate, KSet, TUpdate, Events> {
   constructor(
-    protected readonly createValidator?: IDataValidator<TCreate>,
-    protected readonly updateValidator?: IDataValidator<TUpdate>,
-    protected readonly deleteValidator?: IDataValidator<EntityId, boolean>
+    protected readonly createValidator?: DataValidator<TCreate>,
+    protected readonly updateValidator?: DataValidator<TUpdate>,
+    protected readonly deleteValidator?: DataValidator<EntityId, boolean>
   ) {
     super();
   }

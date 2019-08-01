@@ -1,6 +1,6 @@
-import { IEntityData } from "../../entities/base";
+import { EntityData } from "../../entities/base";
 
-export interface IUserCreateData extends Partial<IEntityData> {
+export interface UserCreateData extends Partial<EntityData> {
   email: string;
   password: string;
   firstName?: string;

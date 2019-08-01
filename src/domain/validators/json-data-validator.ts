@@ -1,11 +1,11 @@
 import * as Ajv from "ajv";
-import { IDataValidator } from "./data-validator";
+import { DataValidator } from "./data-validator";
 import { ValidationError } from "../errors/validation-error";
 
 const defaultValidateOptions: Ajv.Options = {};
 
 export class JsonDataValidator<TInput>
-  implements IDataValidator<TInput, TInput> {
+  implements DataValidator<TInput, TInput> {
   private validateFunction: Ajv.ValidateFunction;
   private ajv: Ajv.Ajv;
 

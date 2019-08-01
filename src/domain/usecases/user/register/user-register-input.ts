@@ -1,5 +1,5 @@
 import { User } from "../../../entities/user/user";
-import { IUserRepository } from "../../../repositories/user/user-repository";
+import { UserRepository } from "../../../repositories/user/user-repository";
 import { EmailExistsError } from "../../../errors/validation-error";
 import { JsonDataValidator } from "../../../validators/json-data-validator";
 
@@ -13,7 +13,7 @@ export type UserRegisterInput = {
 export class UserRegisterInputValidator
   extends JsonDataValidator<UserRegisterInput> {
 
-  constructor(readonly userRepository: IUserRepository) {
+  constructor(readonly userRepository: UserRepository) {
     super(new JsonDataValidator(
       UserRegisterInputValidator.jsonSchema
     ));

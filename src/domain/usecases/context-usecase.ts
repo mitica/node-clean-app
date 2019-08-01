@@ -1,11 +1,11 @@
-import { BaseUseCase, IUseCaseEvents } from "./usecase";
-import { IDomainContext } from "../context";
+import { BaseUseCase, UseCaseEvents } from "./usecase";
+import { DomainContext } from "../context";
 
 export abstract class ContextUseCase<
   TInput,
   TOutput,
-  TContext extends IDomainContext = IDomainContext,
-  TEvents extends IUseCaseEvents<TInput, TOutput> = IUseCaseEvents<
+  TContext extends DomainContext = DomainContext,
+  TEvents extends UseCaseEvents<TInput, TOutput> = UseCaseEvents<
     TInput,
     TOutput
   >

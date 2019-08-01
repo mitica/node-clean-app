@@ -6,7 +6,7 @@ export type EntityId = string;
 /**
  * Root entity data.
  */
-export interface IEntityData {
+export interface EntityData {
   id: EntityId;
   createdAt: Date;
   updatedAt: Date;
@@ -19,9 +19,9 @@ export type EntityType = "user";
  * All entities will extend it.
  */
 export abstract class BaseEntity<
-  TData extends IEntityData = IEntityData,
+  TData extends EntityData = EntityData,
   TType extends EntityType = EntityType
-> implements IEntityData {
+> implements EntityData {
   protected _data: TData;
 
   constructor(readonly entityType: TType, data: TData) {

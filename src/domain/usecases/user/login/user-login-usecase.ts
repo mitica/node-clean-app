@@ -1,6 +1,6 @@
 import { User } from "../../../entities/user/user";
 import { ContextUseCase } from "../../context-usecase";
-import { IDomainContext } from "../../../context";
+import { DomainContext } from "../../../context";
 
 export type UserLoginInput = {
   email: string;
@@ -11,7 +11,7 @@ export type UserLoginInput = {
  * Login a user.
  */
 export class UserLoginUseCase<
-  TContext extends IDomainContext = IDomainContext
+  TContext extends DomainContext = DomainContext
 > extends ContextUseCase<UserLoginInput, User | null, TContext> {
   protected innerExecute(
     input: Readonly<UserLoginInput>,

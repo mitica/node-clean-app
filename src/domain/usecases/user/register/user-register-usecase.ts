@@ -1,13 +1,13 @@
 import { User } from "../../../entities/user/user";
 import { UserRegisterInput } from "./user-register-input";
-import { IDomainContext } from "../../../context";
+import { DomainContext } from "../../../context";
 import { ContextUseCase } from "../../context-usecase";
 
 /**
  * Register user use case.
  */
 export class UserRegisterUseCase<
-  TContext extends IDomainContext = IDomainContext
+  TContext extends DomainContext = DomainContext
 > extends ContextUseCase<UserRegisterInput, User, TContext> {
   protected async innerExecute(
     input: Readonly<UserRegisterInput>,

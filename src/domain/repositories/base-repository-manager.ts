@@ -1,15 +1,15 @@
 import {
-  IRepositoryManagerEvents,
-  IRepositoryManager
+  RepositoryManagerEvents,
+  RepositoryManager
 } from "./repository-manager";
 import { BaseEventEmitter } from "../event-emitter";
-import { IUserRepository } from "./user/user-repository";
+import { UserRepository } from "./user/user-repository";
 
 export class BaseRepositoryManager<
-  TUserRepository extends IUserRepository = IUserRepository,
-  TEvents extends IRepositoryManagerEvents = IRepositoryManagerEvents
+  TUserRepository extends UserRepository = UserRepository,
+  TEvents extends RepositoryManagerEvents = RepositoryManagerEvents
 > extends BaseEventEmitter<TEvents>
-  implements IRepositoryManager<TUserRepository, TEvents> {
+  implements RepositoryManager<TUserRepository, TEvents> {
   constructor(readonly user: TUserRepository) {
     super();
     [user].forEach(repo => {

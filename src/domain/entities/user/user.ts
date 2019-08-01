@@ -1,8 +1,8 @@
-import { BaseEntity, IEntityData, EntityType } from "../base";
+import { BaseEntity, EntityData, EntityType } from "../base";
 
 export type UserRole = "user" | "owner" | "admin" | "moderator";
 
-export interface IUserData extends IEntityData {
+export interface UserData extends EntityData {
   email: string;
   firstName?: string;
   lastName?: string;
@@ -10,10 +10,10 @@ export interface IUserData extends IEntityData {
 }
 
 export type UserReadonlyKeys = "id" | "createdAt";
-export type UserWritableKeys = Exclude<keyof IUserData, UserReadonlyKeys>;
+export type UserWritableKeys = Exclude<keyof UserData, UserReadonlyKeys>;
 
-export class User<TData extends IUserData = IUserData> extends BaseEntity<TData>
-  implements IUserData {
+export class User<TData extends UserData = UserData> extends BaseEntity<TData>
+  implements UserData {
   constructor(data: TData) {
     super(User.EntityType, data);
   }

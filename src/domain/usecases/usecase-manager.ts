@@ -1,9 +1,9 @@
 import { UserUseCases } from "./user/user-usecases";
-import { IUseCaseGroupEvents } from "./usecase-group";
+import { UseCaseGroupEvents } from "./usecase-group";
 import { BaseEventEmitter } from "../event-emitter";
 
 export class UseCaseManager<
-  TEvents extends IUseCaseGroupEvents = IUseCaseGroupEvents
+  TEvents extends UseCaseGroupEvents = UseCaseGroupEvents
 > extends BaseEventEmitter<TEvents> {
   constructor(readonly user: UserUseCases) {
     super();
