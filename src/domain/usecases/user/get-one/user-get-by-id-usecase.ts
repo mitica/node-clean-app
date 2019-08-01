@@ -1,17 +1,18 @@
 import { User } from "../../../entities/user/user";
 import { ContextUseCase } from "../../context-usecase";
 import { DomainContext } from "../../../context";
+import { EntityId } from "../../../entities/base";
 
 /**
- * Get a user by email.
+ * Get a user by id.
  */
-export class GetUserByEmailUseCase<
+export class UserGetByIdUseCase<
   TContext extends DomainContext = DomainContext
-> extends ContextUseCase<string, User | null, TContext> {
+> extends ContextUseCase<EntityId, User | null, TContext> {
   protected innerExecute(
-    input: string,
+    input: EntityId,
     context: Readonly<TContext>
   ): Promise<User | null> {
-    return context.repo.user.getByEmail(input);
+    return context.repo.user.getById(input);
   }
 }

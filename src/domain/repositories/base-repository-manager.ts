@@ -6,10 +6,11 @@ import { BaseEventEmitter } from "../event-emitter";
 import { UserRepository } from "./user/user-repository";
 
 export class BaseRepositoryManager<
-  EventDataMap extends RepositoryManagerEvents = RepositoryManagerEvents
-> extends BaseEventEmitter<EventDataMap>
-  implements RepositoryManager<EventDataMap> {
-  constructor(readonly user: UserRepository) {
+  TUserRepository extends UserRepository = UserRepository,
+  TEvents extends RepositoryManagerEvents = RepositoryManagerEvents
+> extends BaseEventEmitter<TEvents>
+  implements RepositoryManager<TUserRepository, TEvents> {
+  constructor(readonly user: TUserRepository) {
     super();
     [user].forEach(repo => {
       repo.on("entityCreated", data => this.emit("entityCreated", data));

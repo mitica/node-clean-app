@@ -1,12 +1,18 @@
-import { DomainContext } from "../../context";
 import { UserRegisterUseCase } from "./register/user-register-usecase";
 import { UserLoginUseCase } from "./login/user-login-usecase";
-import { GetUserByEmailUseCase } from "./get-one/get-user-by-email-usecase";
-import { GetUserByIdUseCase } from "./get-one/get-user-by-id-usecase";
+import { UserGetByEmailUseCase } from "./get-one/user-get-by-email-usecase";
+import { UserGetByIdUseCase } from "./get-one/user-get-by-id-usecase";
+import { UseCaseGroup, UseCaseGroupEvents } from "../usecase-group";
 
-export interface UserUseCases<TContext extends DomainContext = DomainContext> {
-  readonly register: UserRegisterUseCase<TContext>;
-  readonly login: UserLoginUseCase<TContext>;
-  readonly getByEmail: GetUserByEmailUseCase<TContext>;
-  readonly getById: GetUserByIdUseCase<TContext>;
+export class UserUseCases<
+  TEvents extends UseCaseGroupEvents = UseCaseGroupEvents
+> extends UseCaseGroup<TEvents> {
+  constructor(
+    readonly register: UserRegisterUseCase,
+    readonly login: UserLoginUseCase,
+    readonly getByEmail: UserGetByEmailUseCase,
+    readonly getById: UserGetByIdUseCase
+  ) {
+    super([register as any, login, getByEmail, getById]);
+  }
 }

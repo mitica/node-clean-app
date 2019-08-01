@@ -1,19 +1,22 @@
 import { EventEmitter, BaseEventEmitter } from "../event-emitter";
 import { DataValidator } from "../validators/data-validator";
 
-export interface UseCaseEvents<TInput, TOutput> {
-  preExecute: [Readonly<TInput>];
-  postExecute: [Readonly<TOutput>, Readonly<TInput>];
+export interface UseCaseEvents<
+  TInput extends any = any,
+  TOutput extends any = any
+> {
+  preExecute: { input: Readonly<TInput> };
+  postExecute: { output: Readonly<TOutput>; input: Readonly<TInput> };
 }
 
 export interface UseCase<
-  TInput,
-  TOutput,
+  TInput = any,
+  TOutput = any,
   TEvents extends UseCaseEvents<TInput, TOutput> = UseCaseEvents<
     TInput,
     TOutput
   >,
-  TContext = undefined
+  TContext = any
 > extends EventEmitter<TEvents> {
   execute(
     input: Readonly<TInput>,
@@ -32,7 +35,7 @@ export abstract class BaseUseCase<
     TInput,
     TOutput
   >,
-  TContext = undefined
+  TContext = any
 > extends BaseEventEmitter<TEvents>
   implements UseCase<TInput, TOutput, TEvents, TContext> {
   constructor(
@@ -45,13 +48,13 @@ export abstract class BaseUseCase<
     input: Readonly<TInput>,
     context: Readonly<TContext>
   ): Promise<TOutput> {
-    await this.emit("preExecute", [input]);
+    await this.emit("preExecute", { input });
 
     const validatedInput = await this.validateInput(input, context);
 
     const output = await this.innerExecute(validatedInput, context);
 
-    await this.emit("postExecute", [output, input]);
+    await this.emit("postExecute", { output, input });
 
     return output;
   }

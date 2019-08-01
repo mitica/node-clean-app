@@ -3,12 +3,14 @@ import { EventEmitter } from "../event-emitter";
 import { BaseEntity } from "../entities/base";
 
 export interface RepositoryManagerEvents {
-  entityCreated: BaseEntity
-  entityUpdated: BaseEntity
-  entityDeleted: BaseEntity
+  entityCreated: BaseEntity;
+  entityUpdated: BaseEntity;
+  entityDeleted: BaseEntity;
 }
 
-export interface RepositoryManager<EventDataMap extends RepositoryManagerEvents = RepositoryManagerEvents>
-  extends EventEmitter<EventDataMap> {
-  readonly user: UserRepository;
+export interface RepositoryManager<
+  TUserRepository extends UserRepository = UserRepository,
+  TEvents extends RepositoryManagerEvents = RepositoryManagerEvents
+> extends EventEmitter<TEvents> {
+  readonly user: TUserRepository;
 }

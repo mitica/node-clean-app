@@ -42,11 +42,15 @@ export interface Repository<
   TEntity extends BaseEntity<TData>,
   TCreate,
   KSet extends keyof TData = never,
-  Events extends RepositoryEvents<TData, TEntity> = RepositoryEvents<
+  TUpdate extends RepositoryUpdateData<TData, KSet> = RepositoryUpdateData<
+    TData,
+    KSet
+  >,
+  TEvents extends RepositoryEvents<TData, TEntity> = RepositoryEvents<
     TData,
     TEntity
   >
-> extends EventEmitter<Events> {
+> extends EventEmitter<TEvents> {
   /**
    * Delete an entity by id.
    * @param id Entity id to be deleted
@@ -63,7 +67,7 @@ export interface Repository<
    * Update an existing entity.
    * @param data Entity update data
    */
-  update(data: RepositoryUpdateData<TData, KSet>): Promise<TEntity>;
+  update(data: Readonly<TUpdate>): Promise<TEntity>;
 
   /**
    * Get an entity by id.
@@ -85,12 +89,12 @@ export interface Repository<
 
   /**
    * Deletes all tables or files associated with this repository.
-   * Useful in tests.
+   * Useful for tests.
    */
   deleteStorage(): Promise<void>;
 
   /** Creates tables or files associated with this repository
-   * Useful in tests.
+   * Useful for tests.
    */
   createStorage(): Promise<void>;
 }
