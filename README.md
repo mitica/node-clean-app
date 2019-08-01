@@ -1,1 +1,1 @@
-# ts-node-clean-app
+# node-clean-app

@@ -1,5 +1,5 @@
 {
-  "name": "ts-node-clean-app",
+  "name": "node-clean-app",
   "version": "0.0.1",
   "description": "Base Nodejs/TypeScript Clean Arhitecture application",
   "scripts": {
@@ -16,18 +16,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mitica/ts-node-clean-app.git"
+    "url": "git+https://github.com/mitica/node-clean-app.git"
   },
   "keywords": [
     "clean-app",
-    "ts-node-clean-app"
+    "node-clean-app"
   ],
   "author": "Dumitru Cantea",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/mitica/ts-node-clean-app/issues"
+    "url": "https://github.com/mitica/node-clean-app/issues"
   },
-  "homepage": "https://github.com/mitica/ts-node-clean-app#readme",
+  "homepage": "https://github.com/mitica/node-clean-app#readme",
   "devDependencies": {
     "@types/node": "^12.0.2",
     "typescript": "^3.4.5"
