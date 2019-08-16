@@ -7,6 +7,7 @@ export interface UserData extends EntityData {
   firstName?: string;
   lastName?: string;
   role: UserRole;
+  lastLoginAt?: Date;
 }
 
 export type UserReadonlyKeys = "id" | "createdAt";
@@ -69,6 +70,13 @@ export class User<TData extends UserData = UserData> extends BaseEntity<TData>
     this._data.role = value;
   }
 
+  get lastLoginAt() {
+    return this._data.lastLoginAt;
+  }
+  set lastLoginAt(value: Date | undefined) {
+    this._data.lastLoginAt = value;
+  }
+
   static getFields() {
     return Object.keys(User.jsonSchema.properties);
   }
@@ -85,7 +93,8 @@ export class User<TData extends UserData = UserData> extends BaseEntity<TData>
         password: { type: "string", maxLength: 50, minLength: 6 },
         firstName: { type: "string", maxLength: 50 },
         lastName: { type: "string", maxLength: 50 },
-        role: { type: "string", enum: ["user", "owner", "admin", "moderator"] }
+        role: { type: "string", enum: ["user", "owner", "admin", "moderator"] },
+        lastLoginAt: { type: "string", format: "date-time" },
       }
     };
   }

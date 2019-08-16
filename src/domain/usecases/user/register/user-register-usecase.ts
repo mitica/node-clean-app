@@ -1,3 +1,4 @@
+import * as bcrypt from "bcryptjs";
 import { User } from "../../../entities/user/user";
 import { UserRegisterInput } from "./user-register-input";
 import { DomainContext } from "../../../context";
@@ -13,6 +14,8 @@ export class UserRegisterUseCase<
     input: Readonly<UserRegisterInput>,
     context: Readonly<TContext>
   ): Promise<User> {
-    return context.repo.user.create(input);
+    const password = await bcrypt.hash(input.password, 10);
+
+    return context.repo.user.create({ ...input, password });
   }
 }

@@ -33,6 +33,10 @@ export abstract class BaseRepository<
     super();
   }
 
+  /**
+   * Pre delete operations: validation, etc.
+   * @param id Entity id
+   */
   protected async preDelete(id: EntityId): Promise<boolean> {
     if (this.deleteValidator) {
       if (!(await this.deleteValidator.validate(id))) {
@@ -48,12 +52,16 @@ export abstract class BaseRepository<
     }
     const entity = await this.innerDelete(id);
     if (entity) {
-      await this.emit("entityDeleted", entity);
+      await this.onDeleted(entity);
     }
     return entity;
   }
   abstract innerDelete(id: EntityId): Promise<TEntity | null>;
 
+  /**
+   * Pre create operations: validation, etc.
+   * @param data Entity data
+   */
   protected async preCreate(data: Readonly<TCreate>): Promise<TCreate> {
     if (this.createValidator) {
       data = await this.createValidator.validate(data);
@@ -65,12 +73,16 @@ export abstract class BaseRepository<
     data = await this.preCreate(data);
     const entity = await this.innerCreate(data);
     if (entity) {
-      await this.emit("entityCreated", entity);
+      await this.onCreated(entity);
     }
     return entity;
   }
   abstract innerCreate(data: Readonly<TCreate>): Promise<TEntity>;
 
+  /**
+   * Pre update operations: validation, etc.
+   * @param data Entity data
+   */
   async preUpdate(data: Readonly<TUpdate>): Promise<TUpdate> {
     if (this.updateValidator) {
       data = await this.updateValidator.validate(data);
@@ -81,7 +93,7 @@ export abstract class BaseRepository<
     data = await this.preUpdate(data);
     const entity = await this.innerUpdate(data);
     if (entity) {
-      await this.emit("entityUpdated", entity);
+      await this.onUpdated(entity);
     }
     return entity;
   }
@@ -93,4 +105,28 @@ export abstract class BaseRepository<
 
   abstract deleteStorage(): Promise<void>;
   abstract createStorage(): Promise<void>;
+
+  /**
+   * Fire entityCreated event.
+   * @param entity Created entity
+   */
+  protected async onCreated(entity: Readonly<TEntity>) {
+    return this.emit("entityCreated", entity);
+  }
+
+  /**
+   * Fire entityDeleted event.
+   * @param entity Deleted entity
+   */
+  protected async onDeleted(entity: Readonly<TEntity>) {
+    return this.emit("entityDeleted", entity);
+  }
+
+  /**
+   * Fire entityUpdated event.
+   * @param entity Updated entity
+   */
+  protected async onUpdated(entity: Readonly<TEntity>) {
+    return this.emit("entityUpdated", entity);
+  }
 }
