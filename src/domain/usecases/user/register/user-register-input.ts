@@ -1,6 +1,4 @@
 import { User } from "../../../entities/user/user";
-import { UserRepository } from "../../../repositories/user/user-repository";
-import { EmailExistsError } from "../../../errors/validation-error";
 import { JsonDataValidator } from "../../../validators/json-data-validator";
 
 export type UserRegisterInput = {
@@ -10,23 +8,11 @@ export type UserRegisterInput = {
   lastName?: string;
 };
 
-export class UserRegisterInputValidator
-  extends JsonDataValidator<UserRegisterInput> {
-
-  constructor(readonly userRepository: UserRepository) {
-    super(new JsonDataValidator(
-      UserRegisterInputValidator.jsonSchema
-    ));
-  }
-
-  async validate(input: Readonly<UserRegisterInput>) {
-    await super.validate(input);
-
-    const user = await this.userRepository.getByEmail(input.email);
-    if (user) {
-      throw new EmailExistsError(input.email);
-    }
-    return input;
+export class UserRegisterInputValidator extends JsonDataValidator<
+  UserRegisterInput
+> {
+  constructor() {
+    super(new JsonDataValidator(UserRegisterInputValidator.jsonSchema));
   }
 
   static get jsonSchema() {
