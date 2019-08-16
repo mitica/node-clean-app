@@ -1,4 +1,4 @@
-import { BaseEntity } from "./base";
+import { BaseEntity } from "./base-entity";
 
 export interface IOnEntityEvents<TEntity extends BaseEntity = BaseEntity>
   extends IOnEntityCreated<TEntity>,

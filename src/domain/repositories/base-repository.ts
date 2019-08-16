@@ -3,16 +3,17 @@ import {
   RepositoryUpdateData,
   RepositoryEvents
 } from "./repository";
-import { EntityData, BaseEntity, EntityId } from "../entities/base";
 import { DataValidator } from "../validators/data-validator";
 import { BaseEventEmitter } from "../event-emitter";
+import { EntityData, EntityId } from "../entities/entity-data";
+import { Entity } from "../entities/entity";
 
 /**
  * Base Repository class. All repository should extend this one.
  */
 export abstract class BaseRepository<
   TData extends EntityData,
-  TEntity extends BaseEntity<TData>,
+  TEntity extends Entity<TData>,
   TCreate,
   KSet extends keyof TData,
   TUpdate extends RepositoryUpdateData<TData, KSet> = RepositoryUpdateData<

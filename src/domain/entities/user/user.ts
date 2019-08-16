@@ -1,54 +1,36 @@
-import { BaseEntity, EntityData, EntityType } from "../base";
-
-export type UserRole = "user" | "owner" | "admin" | "moderator";
-
-export interface UserData extends EntityData {
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  role: UserRole;
-  lastLoginAt?: Date;
-}
-
-export type UserReadonlyKeys = "id" | "createdAt";
-export type UserWritableKeys = Exclude<keyof UserData, UserReadonlyKeys>;
+import { BaseEntity, EntityType } from "../base-entity";
+import { UserRole } from "./user-role";
+import { UserData } from "./user-data";
 
 export class User<TData extends UserData = UserData> extends BaseEntity<TData>
   implements UserData {
   constructor(data: TData) {
-    super(User.EntityType, data);
+    super(data, User.EntityType);
   }
+
   static get EntityType(): EntityType {
     return "user";
   }
 
   get email() {
-    return this._data.email;
+    return this.get("email");
   }
-  set email(value: string) {
-    this._data.email = value;
+  set email(value: TData["email"]) {
+    this.set("email", value);
   }
 
   get firstName() {
-    return this._data.firstName;
+    return this.get("firstName");
   }
-  set firstName(value: string | undefined) {
-    if (value === undefined) {
-      delete this._data.firstName;
-    } else {
-      this._data.firstName = value;
-    }
+  set firstName(value: TData["firstName"]) {
+    this.set("firstName", value);
   }
 
   get lastName() {
-    return this._data.lastName;
+    return this.get("lastName");
   }
-  set lastName(value: string | undefined) {
-    if (value === undefined) {
-      delete this._data.lastName;
-    } else {
-      this._data.lastName = value;
-    }
+  set lastName(value: TData["lastName"]) {
+    this.set("lastName", value);
   }
 
   get fullName() {
@@ -64,21 +46,17 @@ export class User<TData extends UserData = UserData> extends BaseEntity<TData>
   }
 
   get role() {
-    return this._data.role;
+    return this.get("role");
   }
-  set role(value: UserRole) {
-    this._data.role = value;
+  set role(value: TData["role"]) {
+    this.set("role", value);
   }
 
   get lastLoginAt() {
-    return this._data.lastLoginAt;
+    return this.get("lastLoginAt");
   }
-  set lastLoginAt(value: Date | undefined) {
-    this._data.lastLoginAt = value;
-  }
-
-  static getFields() {
-    return Object.keys(User.jsonSchema.properties);
+  set lastLoginAt(value: TData["lastLoginAt"]) {
+    this.set("lastLoginAt", value);
   }
 
   static get jsonSchema() {
@@ -93,8 +71,8 @@ export class User<TData extends UserData = UserData> extends BaseEntity<TData>
         password: { type: "string", maxLength: 50, minLength: 6 },
         firstName: { type: "string", maxLength: 50 },
         lastName: { type: "string", maxLength: 50 },
-        role: { type: "string", enum: ["user", "owner", "admin", "moderator"] },
-        lastLoginAt: { type: "string", format: "date-time" },
+        role: { type: "string", enum: Object.values(UserRole) },
+        lastLoginAt: { type: "string", format: "date-time" }
       }
     };
   }

@@ -1,7 +1,7 @@
 import { User } from "../../../entities/user/user";
 import { ContextUseCase } from "../../context-usecase";
 import { DomainContext } from "../../../context";
-import { EntityId } from "../../../entities/base";
+import { EntityId } from "../../../entities/entity-data";
 
 /**
  * Get a user by id.

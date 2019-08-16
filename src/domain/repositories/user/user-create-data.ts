@@ -1,4 +1,4 @@
-import { EntityData } from "../../entities/base";
+import { EntityData } from "../../entities/entity-data";
 
 export interface UserCreateData extends Partial<EntityData> {
   email: string;

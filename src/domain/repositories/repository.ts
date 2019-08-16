@@ -1,6 +1,7 @@
-import { EntityId, EntityData, BaseEntity } from "../entities/base";
 import { OptionalKeys, ArrayKeys } from "../types";
 import { EventEmitter } from "../event-emitter";
+import { EntityData, EntityId } from "../entities/entity-data";
+import { Entity } from "../entities/entity";
 
 export interface RepositoryUpdateData<
   TData extends EntityData,
@@ -30,7 +31,7 @@ export interface RepositoryUpdateData<
 
 export interface RepositoryEvents<
   TData extends EntityData,
-  TEntity extends BaseEntity<TData>
+  TEntity extends Entity<TData>
 > {
   entityCreated: TEntity;
   entityUpdated: TEntity;
@@ -39,7 +40,7 @@ export interface RepositoryEvents<
 
 export interface Repository<
   TData extends EntityData,
-  TEntity extends BaseEntity<TData>,
+  TEntity extends Entity<TData>,
   TCreate,
   KSet extends keyof TData = never,
   TUpdate extends RepositoryUpdateData<TData, KSet> = RepositoryUpdateData<

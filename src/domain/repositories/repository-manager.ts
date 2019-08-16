@@ -1,11 +1,11 @@
 import { UserRepository } from "./user/user-repository";
 import { EventEmitter } from "../event-emitter";
-import { BaseEntity } from "../entities/base";
+import { Entity } from "../entities/entity";
 
 export interface RepositoryManagerEvents {
-  entityCreated: BaseEntity;
-  entityUpdated: BaseEntity;
-  entityDeleted: BaseEntity;
+  entityCreated: Entity;
+  entityUpdated: Entity;
+  entityDeleted: Entity;
 }
 
 export interface RepositoryManager<
