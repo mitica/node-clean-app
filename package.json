@@ -31,11 +31,15 @@
   "devDependencies": {
     "@types/bcryptjs": "^2.4.2",
     "@types/node": "^12.0.2",
-    "typescript": "^3.4.5"
+    "@types/shortid": "^0.0.29",
+    "typescript": "^3.5.3"
   },
   "dependencies": {
     "ajv": "^6.10.0",
     "bcryptjs": "^2.4.3",
-    "emittery": "^0.4.1"
+    "emittery": "^0.4.1",
+    "knex": "^0.19.2",
+    "objection": "^1.6.9",
+    "shortid": "^2.2.14"
   }
 }

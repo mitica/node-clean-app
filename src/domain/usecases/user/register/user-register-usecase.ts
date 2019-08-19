@@ -1,10 +1,14 @@
 import * as bcrypt from "bcryptjs";
 import { User } from "../../../entities/user/user";
-import { UserRegisterInput } from "./user-register-input";
+import {
+  UserRegisterInput,
+  UserRegisterInputValidator
+} from "./user-register-input";
 import { DomainContext } from "../../../context";
 import { ContextUseCase } from "../../context-usecase";
 import { EmailExistsError } from "../../../errors/validation-error";
 import { UseCaseEvents } from "../../usecase";
+import { DataValidator } from "../../../validators/data-validator";
 
 export interface UserRegisterUseCaseEvents
   extends UseCaseEvents<UserRegisterInput, User> {
@@ -22,6 +26,14 @@ export class UserRegisterUseCase<
   TContext,
   UserRegisterUseCaseEvents
 > {
+  constructor(
+    inputValidator: DataValidator<
+      UserRegisterInput
+    > = new UserRegisterInputValidator()
+  ) {
+    super(inputValidator);
+  }
+
   protected async innerExecute(
     input: Readonly<UserRegisterInput>,
     context: Readonly<TContext>

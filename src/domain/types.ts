@@ -15,3 +15,5 @@ export type OptionalKeys<T> = {
 }[keyof T];
 
 export type ArrayKeys<T> = PickKeysByType<T, any[]>;
+
+export type WithOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;

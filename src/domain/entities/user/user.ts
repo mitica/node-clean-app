@@ -12,6 +12,13 @@ export class User<TData extends UserData = UserData> extends BaseEntity<TData>
     return "user";
   }
 
+  get password() {
+    return this.get("password");
+  }
+  set password(_value: TData["password"]) {
+    throw new Error(`Password cannot be set`);
+  }
+
   get email() {
     return this.get("email");
   }
@@ -62,17 +69,17 @@ export class User<TData extends UserData = UserData> extends BaseEntity<TData>
   static get jsonSchema() {
     return {
       type: "object",
-      required: ["id", "createdAt", "updatedAt", "email", "role"],
+      required: ["email", "password", "role"],
       properties: {
         id: { type: "string", maxLength: 40 },
-        createdAt: { type: "string", format: "date-time" },
-        updatedAt: { type: "string", format: "date-time" },
+        createdAt: { type: "string", format: "datetime" },
+        updatedAt: { type: "string", format: "datetime" },
         email: { type: "string", format: "email" },
         password: { type: "string", maxLength: 50, minLength: 6 },
         firstName: { type: "string", maxLength: 50 },
         lastName: { type: "string", maxLength: 50 },
         role: { type: "string", enum: Object.values(UserRole) },
-        lastLoginAt: { type: "string", format: "date-time" }
+        lastLoginAt: { type: "string", format: "datetime" }
       }
     };
   }

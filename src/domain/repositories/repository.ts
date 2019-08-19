@@ -77,18 +77,6 @@ export interface Repository<
   getById(id: EntityId): Promise<TEntity | null>;
 
   /**
-   * Get entities by ids
-   * @param ids Entities ids
-   */
-  getByIds(ids: EntityId[]): Promise<TEntity[]>;
-
-  /**
-   * Check if an entity exists.
-   * @param id Entity id
-   */
-  exists(id: EntityId): Promise<boolean>;
-
-  /**
    * Deletes all tables or files associated with this repository.
    * Useful for tests.
    */

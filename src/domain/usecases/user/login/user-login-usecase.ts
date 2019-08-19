@@ -19,15 +19,14 @@ export class UserLoginUseCase<
     input: Readonly<UserLoginInput>,
     context: Readonly<TContext>
   ) {
-    const userData = await context.repo.user.getPasswordByEmail(input.email);
-    if (!userData) {
+    const user = await context.repo.user.getByEmail(input.email);
+
+    if (!user || !(await bcrypt.compare(input.password, user.password))) {
       throw new UserLoginError(input.email);
     }
-    if (!(await bcrypt.compare(input.password, userData.password))) {
-      throw new UserLoginError(input.email);
-    }
+
     return context.repo.user.update({
-      id: userData.id,
+      id: user.id,
       set: {
         lastLoginAt: new Date()
       }

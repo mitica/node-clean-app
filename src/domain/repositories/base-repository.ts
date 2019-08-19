@@ -101,8 +101,6 @@ export abstract class BaseRepository<
   abstract innerUpdate(data: Readonly<TUpdate>): Promise<TEntity>;
 
   abstract getById(id: string): Promise<TEntity | null>;
-  abstract getByIds(ids: string[]): Promise<TEntity[]>;
-  abstract exists(id: string): Promise<boolean>;
 
   abstract deleteStorage(): Promise<void>;
   abstract createStorage(): Promise<void>;

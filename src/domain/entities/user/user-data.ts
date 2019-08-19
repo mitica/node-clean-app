@@ -3,10 +3,11 @@ import { EntityData } from "../entity-data";
 
 export interface UserData extends EntityData {
   email: string;
+  role: UserRole;
   firstName?: string;
   lastName?: string;
-  role: UserRole;
   lastLoginAt?: Date;
+  password: string;
 }
 
 export type UserReadonlyKeys = "id" | "createdAt";

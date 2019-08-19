@@ -9,5 +9,5 @@ export type EntityId = string;
 export interface EntityData {
   id: EntityId;
   createdAt: Date;
-  updatedAt: Date;
+  updatedAt?: Date;
 }
