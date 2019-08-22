@@ -1,4 +1,4 @@
-import { OptionalKeys, ArrayKeys } from "../types";
+import { OptionalKeys } from "../types";
 import { EventEmitter } from "../event-emitter";
 import { EntityData, EntityId } from "../entities/entity-data";
 import { Entity } from "../entities/entity";
@@ -18,11 +18,11 @@ export interface RepositoryUpdateData<
   /**
    * Add items to array fields.
    */
-  readonly add?: Readonly<Pick<TData, ArrayKeys<TData>>>;
+  // readonly add?: Readonly<Pick<TData, ArrayKeys<TData>>>;
   /**
    * Remove items from array fields.
    */
-  readonly remove?: Readonly<Pick<TData, ArrayKeys<TData>>>;
+  // readonly remove?: Readonly<Pick<TData, ArrayKeys<TData>>>;
   /**
    * Entity fields to delete.
    */

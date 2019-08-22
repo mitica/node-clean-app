@@ -30,6 +30,7 @@
   "homepage": "https://github.com/mitica/node-clean-app#readme",
   "devDependencies": {
     "@types/bcryptjs": "^2.4.2",
+    "@types/lokijs": "^1.5.2",
     "@types/node": "^12.0.2",
     "@types/shortid": "^0.0.29",
     "typescript": "^3.5.3"
@@ -38,8 +39,7 @@
     "ajv": "^6.10.0",
     "bcryptjs": "^2.4.3",
     "emittery": "^0.4.1",
-    "knex": "^0.19.2",
-    "objection": "^1.6.9",
+    "lokijs": "^1.5.7",
     "shortid": "^2.2.14"
   }
 }
