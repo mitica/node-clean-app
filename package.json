@@ -36,7 +36,7 @@
     "typescript": "^3.5.3"
   },
   "dependencies": {
-    "ajv": "^6.10.0",
+    "ajv": "^6.12.3",
     "bcryptjs": "^2.4.3",
     "emittery": "^0.4.1",
     "lokijs": "^1.5.7",
