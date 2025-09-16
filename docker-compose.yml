@@ -1,0 +1,54 @@
+services:
+  web:
+    container_name: api
+    build: .
+    env_file:
+      - .env
+    links:
+      - db
+      - redis
+    ports:
+      - ${WEB_PORT:-42407}:42407 # Application port
+      - ${WEB_DEBUG_PORT:-9222}:9222 # Debugging port
+    environment:
+      REDISCLOUD_URL: redis://api_cache
+      DATABASE_URL: postgres://api@db:5432/api
+    volumes:
+      - .:/usr/src/app  # Mount the project directory
+      - /usr/src/app/node_modules  # Mount node_modules inside container
+    command: yarn debug
+    depends_on:
+      - db
+      - redis
+
+  db:
+    build:
+      context: ./docker/postgres
+      dockerfile: Dockerfile.pg
+    container_name: api_db
+    command: ["postgres", "-c", "max_connections=200"]
+    restart: always
+    networks:
+      - default
+    ports:
+      - ${PG_DATABASE_PORT:-5432}:5432
+    volumes:
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/1-database.sql
+      - postgres-storage:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: "api"
+      POSTGRES_DB: "api"
+      POSTGRES_HOST_AUTH_METHOD: "trust"
+
+  redis:
+    image: redis
+    container_name: api_cache
+    ports:
+      - ${API_REDIS_PORT:-6379}:6379
+    volumes:
+      - redis-data:/data
+
+volumes:
+  postgres-storage:
+  redis-data:
+  node_modules:

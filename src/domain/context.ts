@@ -1,14 +1,8 @@
-import { RepositoryManager } from "./repositories/repository-manager";
-import { UseCaseManager } from "./usecases/usecase-manager";
-import { User } from "./entities/user/user";
-import { DomainConfig } from "./config";
+import { EntityId } from "./base";
 
 export interface DomainContext {
-  config: Readonly<DomainConfig>;
-  repo: Readonly<RepositoryManager>;
-  usecase: Readonly<UseCaseManager>;
-}
-
-export interface UserDomainContext extends DomainContext {
-  user: Readonly<User>;
+  userId?: EntityId;
+  lang?: string;
+  isAuthenticated?: boolean;
+  isAdmin?: boolean;
 }

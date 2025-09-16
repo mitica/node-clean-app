@@ -1,8 +1,26 @@
 {
   "name": "node-clean-app",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Base Nodejs/TypeScript Clean Arhitecture application",
   "scripts": {
+    "up": "docker-compose up",
+    "down": "docker-compose down",
+    "down-up": "docker-compose down && docker volume rm api_node_modules && yarn build && docker-compose up",
+    "dev": "docker-compose up && nodemon",
+    "clean": "rm -rf dist",
+    "build": "yarn clean && yarn tsc --project ./tsconfig.json && yarn copy-files",
+    "copy-files": "./node_modules/.bin/cpx \"src/**/*.{json,html,csv,tsv,json,png,jpg,md}\" dist",
+    "knex": "node dist/infrastructure/database/scripts/knex.js",
+    "ts-knex": "ts-node src/infrastructure/database/scripts/knex.ts",
+    "migrate": "yarn knex migrate:latest",
+    "rollback": "yarn knex migrate:rollback",
+    "new-migrate": "yarn ts-knex migrate:make",
+    "new-seed": "yarn ts-knex seed:make",
+    "seed": "yarn knex seed:run",
+    "drop-db": "node dist/infrastructure/database/scripts/drop-db.js",
+    "drop-cache": "node dist/infrastructure/database/scripts/drop-cache.js",
+    "drop-es": "node dist/infrastructure/database/scripts/drop-es.js",
+    "reset-es": "node dist/infrastructure/database/scripts/reset-es.js",
     "pretest": "npm run clean && npm run tsc",
     "test": "ava --no-cache --verbose lib/**/*.test.js",
     "posttest": "npm run clean-test-code",
@@ -12,7 +30,7 @@
     "postversion": "git push --follow-tags"
   },
   "engines": {
-    "node": ">=8.0.0"
+    "node": ">=20.0.0"
   },
   "repository": {
     "type": "git",
@@ -29,17 +47,28 @@
   },
   "homepage": "https://github.com/mitica/node-clean-app#readme",
   "devDependencies": {
-    "@types/bcryptjs": "^2.4.2",
-    "@types/lokijs": "^1.5.2",
+    "@types/bcryptjs": "^3.0.0",
+    "@types/json-schema": "^7.0.15",
     "@types/node": "^12.0.2",
-    "@types/shortid": "^0.0.29",
-    "typescript": "^3.5.3"
+    "@types/object-hash": "^3.0.6",
+    "@types/pg": "^8.15.5",
+    "@types/ramda": "^0.31.1",
+    "cpx": "^1.5.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
   },
   "dependencies": {
-    "ajv": "^6.10.0",
-    "bcryptjs": "^2.4.3",
-    "emittery": "^0.4.1",
-    "lokijs": "^1.5.7",
-    "shortid": "^2.2.14"
+    "@hono/node-server": "^1.19.3",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "bcryptjs": "^3.0.2",
+    "dotenv": "^17.2.2",
+    "hono": "^4.9.7",
+    "ioredis": "^5.7.0",
+    "json-schema": "^0.4.0",
+    "knex": "^3.1.0",
+    "object-hash": "^3.0.0",
+    "pg": "^8.16.3",
+    "ramda": "^0.31.3"
   }
 }

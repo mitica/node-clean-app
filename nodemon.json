@@ -1,0 +1,6 @@
+{
+  "watch": ["src"],
+  "ext": "ts,graphql,json",
+  "ignore": ["src/tests/**"],
+  "exec": "ts-node --transpile-only ./src/index.ts"
+}

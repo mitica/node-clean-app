@@ -1,22 +1,33 @@
 {
-  "compileOnSave": false,
   "compilerOptions": {
-    "module": "commonjs",
-    "rootDir": "./src",
-    "target": "es6",
+    "incremental": true,
+    "outDir": "./dist",
+    "baseUrl": "./src",
+    "target": "ES2022",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "noImplicitAny": true,
     "removeComments": true,
     "preserveConstEnums": true,
-    "sourceMap": false,
-    "moduleResolution": "node",
+    "skipLibCheck": true,
+    "sourceMap": true,
     "declaration": false,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noImplicitOverride": true,
+    "allowUnreachableCode": false,
+    "exactOptionalPropertyTypes": false,
+    "useUnknownInCatchVariables": false,
     "allowJs": false,
-    "noEmit": true,
+    "esModuleInterop": true,
+    "lib": ["es2018", "esnext.asynciterable", "DOM"],
+    "forceConsistentCasingInFileNames": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
     "strict": true
   },
-  "include": [
-    "src/**/*.ts"
-  ]
+  "typeRoots": ["node_modules/@types", "node_modules/types", "src/typings"],
+  "exclude": ["src/tests/generated-api-client"],
+  "include": ["./src"]
 }
