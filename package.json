@@ -63,7 +63,7 @@
     "ajv-formats": "^3.0.1",
     "bcryptjs": "^3.0.2",
     "dotenv": "^17.2.2",
-    "hono": "^4.9.7",
+    "hono": "^4.10.2",
     "ioredis": "^5.7.0",
     "json-schema": "^0.4.0",
     "knex": "^3.1.0",
