@@ -1,4 +1,4 @@
-import { EventEmitter } from "events";
+import EventEmitter from "emittery";
 
 interface Events {
   [eventName: string]: any;
@@ -19,12 +19,11 @@ export class TypedEventEmitter<EventDataMap extends Events> {
     return this;
   }
 
-  once<Name extends keyof EventDataMap>(
+  async once<Name extends keyof EventDataMap>(
     eventName: Name,
     listener: (eventData: EventDataMap[Name]) => any
-  ): this {
-    this._emitter.once(eventName as any, listener as any);
-    return this;
+  ): Promise<void> {
+    await this._emitter.once(eventName as any, listener as any);
   }
 
   off<Name extends keyof EventDataMap>(
@@ -34,10 +33,10 @@ export class TypedEventEmitter<EventDataMap extends Events> {
     this._emitter.off(eventName as any, listener as any);
   }
 
-  protected emit<Name extends keyof EventDataMap>(
+  protected async emit<Name extends keyof EventDataMap>(
     eventName: Name,
     eventData: EventDataMap[Name]
-  ): boolean {
-    return this._emitter.emit(eventName as any, eventData);
+  ): Promise<void> {
+    await this._emitter.emit(eventName as any, eventData);
   }
 }
