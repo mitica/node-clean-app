@@ -1,0 +1,440 @@
+import {
+  IWorker,
+  TaskHandlerContext,
+  TaskHandlerRegistration,
+  WorkerConfig,
+  WorkerStats,
+} from "../domain/worker";
+import {
+  WorkerTask,
+  WorkerTaskPriority,
+  WorkerTaskStatus,
+} from "../domain/entity/worker-task";
+import { WorkerTaskRepository } from "../domain/repository";
+import { eventBus } from "../config";
+import { config } from "../config";
+
+// Import worker task events for type safety
+import "../domain/entity/worker-task.events";
+import { EntityId } from "../domain";
+
+/**
+ * Default worker configuration
+ */
+export const defaultWorkerConfig: WorkerConfig = {
+  workerId: `worker-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+  concurrency: config.jobs.concurrency,
+  pollInterval: 1000,
+  taskTimeout: config.jobs.timeout,
+  lockDuration: 5 * 60 * 1000, // 5 minutes
+  taskTypes: [],
+  staleTaskCheckInterval: 60 * 1000, // 1 minute
+};
+
+/**
+ * Worker implementation for processing tasks from the database queue
+ */
+export class Worker implements IWorker {
+  private readonly config: WorkerConfig;
+  private readonly handlers: Map<string, TaskHandlerRegistration> = new Map();
+  private readonly activeTasks: Map<number, Promise<void>> = new Map();
+
+  private running = false;
+  private shuttingDown = false;
+  private pollTimer?: NodeJS.Timeout;
+  private staleCheckTimer?: NodeJS.Timeout;
+  private startedAt?: Date;
+
+  private stats = {
+    tasksProcessed: 0,
+    tasksSucceeded: 0,
+    tasksFailed: 0,
+  };
+
+  constructor(
+    private readonly taskRepository: WorkerTaskRepository,
+    config?: Partial<WorkerConfig>
+  ) {
+    this.config = { ...defaultWorkerConfig, ...config };
+  }
+
+  /**
+   * Register a handler for a specific task type
+   */
+  registerHandler(registration: TaskHandlerRegistration): void {
+    if (this.handlers.has(registration.type)) {
+      console.warn(
+        `[Worker] Overwriting existing handler for task type: ${registration.type}`
+      );
+    }
+    this.handlers.set(registration.type, registration);
+    console.log(
+      `[Worker] Registered handler for task type: ${registration.type}`
+    );
+  }
+
+  /**
+   * Start the worker
+   */
+  async start(): Promise<void> {
+    if (this.running) {
+      console.warn(
+        `[Worker] Worker ${this.config.workerId} is already running`
+      );
+      return;
+    }
+
+    console.log(`[Worker] Starting worker ${this.config.workerId}`);
+    console.log(`[Worker] Concurrency: ${this.config.concurrency}`);
+    console.log(`[Worker] Poll interval: ${this.config.pollInterval}ms`);
+    console.log(
+      `[Worker] Task types: ${
+        this.config.taskTypes.length ? this.config.taskTypes.join(", ") : "all"
+      }`
+    );
+
+    this.running = true;
+    this.shuttingDown = false;
+    this.startedAt = new Date();
+
+    // Reset any stale tasks from previous runs
+    await this.resetStaleTasks();
+
+    // Start polling for tasks
+    this.pollTimer = setInterval(() => this.poll(), this.config.pollInterval);
+
+    // Start stale task checker
+    this.staleCheckTimer = setInterval(
+      () => this.resetStaleTasks(),
+      this.config.staleTaskCheckInterval
+    );
+
+    // Initial poll
+    await this.poll();
+
+    console.log(`[Worker] Worker ${this.config.workerId} started`);
+  }
+
+  /**
+   * Stop the worker gracefully
+   */
+  async stop(): Promise<void> {
+    if (!this.running) {
+      return;
+    }
+
+    console.log(`[Worker] Stopping worker ${this.config.workerId}...`);
+    this.shuttingDown = true;
+    this.running = false;
+
+    // Clear timers
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer);
+      this.pollTimer = undefined;
+    }
+    if (this.staleCheckTimer) {
+      clearInterval(this.staleCheckTimer);
+      this.staleCheckTimer = undefined;
+    }
+
+    // Wait for active tasks to complete
+    if (this.activeTasks.size > 0) {
+      console.log(
+        `[Worker] Waiting for ${this.activeTasks.size} active tasks to complete...`
+      );
+      // Use Promise.all with catch to wait for all tasks regardless of outcome
+      const taskPromises = Array.from(this.activeTasks.values()).map((p) =>
+        p.catch(() => {})
+      );
+      await Promise.all(taskPromises);
+    }
+
+    console.log(`[Worker] Worker ${this.config.workerId} stopped`);
+  }
+
+  /**
+   * Check if the worker is running
+   */
+  isRunning(): boolean {
+    return this.running;
+  }
+
+  /**
+   * Check if shutdown was requested
+   */
+  isShuttingDown(): boolean {
+    return this.shuttingDown;
+  }
+
+  /**
+   * Get worker statistics
+   */
+  getStats(): WorkerStats {
+    return {
+      workerId: this.config.workerId,
+      isRunning: this.running,
+      tasksProcessed: this.stats.tasksProcessed,
+      tasksSucceeded: this.stats.tasksSucceeded,
+      tasksFailed: this.stats.tasksFailed,
+      currentTasks: this.activeTasks.size,
+      uptime: this.startedAt ? Date.now() - this.startedAt.getTime() : 0,
+      startedAt: this.startedAt,
+    };
+  }
+
+  /**
+   * Poll for available tasks
+   */
+  private async poll(): Promise<void> {
+    if (!this.running || this.shuttingDown) {
+      return;
+    }
+
+    // Check if we have capacity
+    const availableSlots = this.config.concurrency - this.activeTasks.size;
+    if (availableSlots <= 0) {
+      return;
+    }
+
+    // Acquire tasks up to available capacity
+    for (let i = 0; i < availableSlots; i++) {
+      if (this.shuttingDown) break;
+
+      try {
+        const task = await this.taskRepository.acquireNextTask({
+          workerId: this.config.workerId,
+          lockDuration: this.config.lockDuration,
+          taskTypes: this.config.taskTypes.length
+            ? this.config.taskTypes
+            : undefined,
+        });
+
+        if (task) {
+          this.processTask(task);
+        } else {
+          // No more tasks available
+          break;
+        }
+      } catch (error) {
+        console.error(`[Worker] Error acquiring task:`, error);
+        break;
+      }
+    }
+  }
+
+  /**
+   * Process a task (non-blocking)
+   */
+  private processTask(task: WorkerTask): void {
+    const taskPromise = this.executeTask(task);
+    this.activeTasks.set(task.id, taskPromise);
+
+    taskPromise.finally(() => {
+      this.activeTasks.delete(task.id);
+    });
+  }
+
+  /**
+   * Execute a single task
+   */
+  private async executeTask(task: WorkerTask): Promise<void> {
+    const startTime = Date.now();
+    const handler = this.handlers.get(task.type);
+
+    console.log(
+      `[Worker] Processing task ${task.id} (type: ${task.type}, attempt: ${task.attempts})`
+    );
+
+    // Emit started event
+    await eventBus.emit("worker-task:started", {
+      task,
+      workerId: this.config.workerId,
+    });
+
+    if (!handler) {
+      console.error(
+        `[Worker] No handler registered for task type: ${task.type}`
+      );
+      await this.handleTaskFailure(
+        task,
+        new Error(`No handler for task type: ${task.type}`),
+        startTime
+      );
+      return;
+    }
+
+    const timeout = handler.timeout || this.config.taskTimeout;
+
+    try {
+      // Create handler context
+      const context: TaskHandlerContext = {
+        task,
+        workerId: this.config.workerId,
+        isShuttingDown: () => this.shuttingDown,
+      };
+
+      // Execute with timeout
+      const result = await Promise.race([
+        handler.handler(context),
+        new Promise<never>((_, reject) =>
+          setTimeout(
+            () => reject(new Error(`Task timeout after ${timeout}ms`)),
+            timeout
+          )
+        ),
+      ]);
+
+      if (result.success) {
+        await this.handleTaskSuccess(task, result.result, startTime);
+      } else {
+        await this.handleTaskFailure(
+          task,
+          result.error || new Error("Task failed without error"),
+          startTime
+        );
+      }
+    } catch (error) {
+      await this.handleTaskFailure(task, error as Error, startTime);
+    }
+  }
+
+  /**
+   * Handle successful task completion
+   */
+  private async handleTaskSuccess(
+    task: WorkerTask,
+    result: Record<string, unknown> | undefined,
+    startTime: number
+  ): Promise<void> {
+    const duration = Date.now() - startTime;
+
+    try {
+      const completedTask = await this.taskRepository.markCompleted(
+        task.id,
+        result
+      );
+
+      this.stats.tasksProcessed++;
+      this.stats.tasksSucceeded++;
+
+      console.log(
+        `[Worker] Task ${task.id} completed successfully in ${duration}ms`
+      );
+
+      await eventBus.emit("worker-task:completed", {
+        task: completedTask,
+        result,
+        duration,
+      });
+    } catch (error) {
+      console.error(`[Worker] Error marking task as completed:`, error);
+    }
+  }
+
+  /**
+   * Handle task failure
+   */
+  private async handleTaskFailure(
+    task: WorkerTask,
+    error: Error,
+    startTime: number
+  ): Promise<void> {
+    const duration = Date.now() - startTime;
+
+    try {
+      const failedTask = await this.taskRepository.markFailed(task.id, error);
+      const willRetry = failedTask.status === WorkerTaskStatus.PENDING;
+
+      this.stats.tasksProcessed++;
+      this.stats.tasksFailed++;
+
+      console.error(
+        `[Worker] Task ${task.id} failed after ${duration}ms: ${error.message}`
+      );
+      if (willRetry) {
+        console.log(
+          `[Worker] Task ${task.id} will be retried (attempt ${task.attempts}/${task.maxAttempts})`
+        );
+      }
+
+      await eventBus.emit("worker-task:failed", {
+        task: failedTask,
+        error,
+        willRetry,
+      });
+
+      if (willRetry) {
+        await eventBus.emit("worker-task:retrying", {
+          task: failedTask,
+          attempt: task.attempts + 1,
+          nextAttemptAt: new Date(),
+        });
+      }
+    } catch (err) {
+      console.error(`[Worker] Error marking task as failed:`, err);
+    }
+  }
+
+  /**
+   * Reset stale tasks that have expired locks
+   */
+  private async resetStaleTasks(): Promise<void> {
+    try {
+      const count = await this.taskRepository.resetStaleTasks();
+      if (count > 0) {
+        console.log(`[Worker] Reset ${count} stale tasks`);
+      }
+    } catch (error) {
+      console.error(`[Worker] Error resetting stale tasks:`, error);
+    }
+  }
+}
+
+/**
+ * Create a new worker task
+ */
+export interface CreateTaskOptions {
+  type: string;
+  payload: Record<string, unknown>;
+  priority?: WorkerTaskPriority | number;
+  maxAttempts?: number;
+  scheduledAt?: Date;
+  createdByUserId?: EntityId;
+  /**
+   * Optional idempotency key to prevent duplicate tasks.
+   * If provided and an active task with this key exists, returns existing task.
+   */
+  idempotencyKey?: string;
+}
+
+/**
+ * Result of creating a worker task
+ */
+export interface CreateTaskResult {
+  task: WorkerTask;
+  /** True if a new task was created, false if existing was returned */
+  created: boolean;
+}
+
+/**
+ * Helper to create a worker task through the repository with idempotency support
+ */
+export async function createWorkerTask(
+  taskRepository: WorkerTaskRepository,
+  options: CreateTaskOptions
+): Promise<CreateTaskResult> {
+  return taskRepository.createIdempotent(
+    {
+      type: options.type,
+      payload: options.payload,
+      status: WorkerTaskStatus.PENDING,
+      priority: options.priority ?? WorkerTaskPriority.NORMAL,
+      attempts: 0,
+      maxAttempts: options.maxAttempts ?? 3,
+      idempotencyKey: options.idempotencyKey,
+      createdByUserId: options.createdByUserId,
+      scheduledAt: options.scheduledAt?.toISOString(),
+    },
+    {}
+  );
+}

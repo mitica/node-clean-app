@@ -10,6 +10,8 @@
     "clean": "rm -rf dist",
     "build": "yarn clean && yarn tsc --project ./tsconfig.json && yarn copy-files",
     "copy-files": "./node_modules/.bin/cpx \"src/**/*.{json,html,csv,tsv,json,png,jpg,md}\" dist",
+    "worker": "node dist/worker/run.js",
+    "worker:dev": "ts-node src/worker/run.ts",
     "knex": "node dist/infra/database/scripts/knex.js",
     "ts-knex": "ts-node src/infra/database/scripts/knex.ts",
     "migrate": "yarn knex migrate:latest",
