@@ -5,7 +5,7 @@ import { TaskHandlerRegistration } from "../../domain/worker";
  * 
  * Usage:
  * ```typescript
- * await createWorkerTask(taskRepo, {
+ * await createWorkerTask(ctx, {
  *   type: "email:send",
  *   payload: {
  *     to: "user@example.com",

@@ -1,11 +1,12 @@
 import { BaseUseCase } from "../../domain/usecase";
-import { AppContext } from "../../config/app-context";
-import { RequiredJSONSchema, EntityId } from "../../domain/base";
+import { AppContext } from "../../config";
 import {
+  RequiredJSONSchema,
+  EntityId,
   WorkerTask,
   WorkerTaskStatus,
   WorkerTaskUpdateData,
-} from "../../domain/entity/worker-task";
+} from "../../domain";
 
 export interface RetryTaskInput {
   /** Task ID to retry */
@@ -49,7 +50,7 @@ export class RetryTaskUseCase extends BaseUseCase<
       attempts: input.resetAttempts ? 0 : undefined,
     };
 
-    const retried = await ctx.repo.workerTask.update(updateData, {});
+    const retried = await ctx.repo.workerTask.update(updateData, { ctx });
 
     return retried;
   }

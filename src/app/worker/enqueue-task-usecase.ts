@@ -5,7 +5,7 @@ import {
   WorkerTaskStatus,
   RequiredJSONSchema,
 } from "../../domain";
-import { AppContext } from "../../config/app-context";
+import { AppContext } from "../../config";
 
 export interface EnqueueTaskInput {
   /** Task type identifier */
@@ -61,7 +61,7 @@ export class EnqueueTaskUseCase extends BaseUseCase<
         idempotencyKey: input.idempotencyKey,
         scheduledAt: input.scheduledAt,
       },
-      {}
+      { ctx }
     );
 
     if (!result.created && input.idempotencyKey) {

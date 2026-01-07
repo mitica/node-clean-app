@@ -34,7 +34,7 @@ export class CancelTaskUseCase extends BaseUseCase<
         status: WorkerTaskStatus.CANCELLED,
         finishedAt: new Date().toISOString(),
       },
-      {}
+      { ctx }
     );
 
     return cancelled;

@@ -2,10 +2,10 @@ import { config } from "../config";
 import { AppContext } from "../config/app-context";
 import { Worker } from "./worker";
 import { exampleHandlers } from "./handlers";
-import { WorkerTaskDbRepository } from "../infra/repository/db-worker-task-repository";
 
 // Register event handlers
 import "../app/listeners";
+import { WorkerTaskRepository } from "../domain";
 
 /**
  * Worker Application
@@ -14,13 +14,9 @@ import "../app/listeners";
  */
 export class WorkerApp {
   private worker: Worker;
-  private context: AppContext;
-  private taskRepository: WorkerTaskDbRepository;
 
-  constructor() {
-    this.context = new AppContext();
-    this.taskRepository = new WorkerTaskDbRepository();
-    this.worker = new Worker(this.taskRepository, {
+  constructor(private context: AppContext) {
+    this.worker = new Worker(context, {
       workerId: `worker-${process.env.HOSTNAME || "local"}-${Date.now()}`,
       concurrency: config.jobs.concurrency,
       taskTimeout: config.jobs.timeout,
@@ -73,8 +69,8 @@ export class WorkerApp {
   /**
    * Get the task repository for creating tasks
    */
-  getTaskRepository(): WorkerTaskDbRepository {
-    return this.taskRepository;
+  getTaskRepository(): WorkerTaskRepository {
+    return this.context.repo.workerTask;
   }
 
   /**
@@ -92,7 +88,8 @@ export class WorkerApp {
  * Main entry point for running the worker standalone
  */
 async function main(): Promise<void> {
-  const app = new WorkerApp();
+  const ctx = new AppContext();
+  const app = new WorkerApp(ctx);
 
   // Graceful shutdown handlers
   process.on("SIGINT", async () => {

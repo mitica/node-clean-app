@@ -5,16 +5,57 @@ import {
   WorkerTaskStatus,
   WorkerTaskUpdateData
 } from "../entity/worker-task";
-import { Repository, RepositoryMethodOptions } from "./repository";
+import { Repository, RepositoryReadOptions, RepositoryWriteOptions } from "./repository";
 import { EntityId } from "../base";
 
-export interface AcquireTaskOptions extends RepositoryMethodOptions {
+export interface AcquireTaskOptions extends RepositoryReadOptions {
   /** Worker ID to lock the task */
   workerId: string;
   /** Lock duration in milliseconds (default: 5 minutes) */
   lockDuration?: number;
   /** Task types to acquire (empty = all types) */
   taskTypes?: string[];
+}
+
+export interface FindPendingInput {
+  /** Task types to filter (empty = all types) */
+  taskTypes?: string[];
+  /** Maximum number of tasks to return (default: 100) */
+  limit?: number;
+}
+
+export interface MarkCompletedInput {
+  /** Task ID */
+  id: EntityId;
+  /** Optional result data */
+  result?: Record<string, unknown>;
+}
+
+export interface MarkFailedInput {
+  /** Task ID */
+  id: EntityId;
+  /** Error that caused the failure */
+  error: Error;
+}
+
+export interface ReleaseLockInput {
+  /** Task ID */
+  id: EntityId;
+}
+
+export interface CountByStatusInput {
+  /** Status to count */
+  status: WorkerTaskStatus;
+}
+
+export interface CleanupOldTasksInput {
+  /** Delete tasks older than this many days */
+  olderThanDays: number;
+}
+
+export interface FindByIdempotencyKeyInput {
+  /** Idempotency key to search for */
+  key: string;
 }
 
 export interface WorkerTaskRepository
@@ -34,76 +75,73 @@ export interface WorkerTaskRepository
    * Find all pending tasks, optionally filtered by type.
    */
   findPending(
-    taskTypes?: string[],
-    limit?: number,
-    opt?: RepositoryMethodOptions
+    input?: FindPendingInput,
+    opt?: RepositoryReadOptions
   ): Promise<WorkerTask[]>;
 
   /**
    * Find all running tasks.
    */
-  findRunning(opt?: RepositoryMethodOptions): Promise<WorkerTask[]>;
+  findRunning(opt?: RepositoryReadOptions): Promise<WorkerTask[]>;
 
   /**
    * Find stale tasks (running but lock expired).
    */
-  findStaleTasks(opt?: RepositoryMethodOptions): Promise<WorkerTask[]>;
+  findStaleTasks(opt?: RepositoryReadOptions): Promise<WorkerTask[]>;
 
   /**
    * Mark a task as completed with optional result.
    */
   markCompleted(
-    id: EntityId,
-    result?: Record<string, unknown>,
-    opt?: RepositoryMethodOptions
+    input: MarkCompletedInput,
+    opt: RepositoryWriteOptions
   ): Promise<WorkerTask>;
 
   /**
    * Mark a task as failed with error details.
    */
   markFailed(
-    id: EntityId,
-    error: Error,
-    opt?: RepositoryMethodOptions
+    input: MarkFailedInput,
+    opt: RepositoryWriteOptions
   ): Promise<WorkerTask>;
 
   /**
    * Release lock on a task (used for graceful shutdown).
    */
-  releaseLock(id: EntityId, opt?: RepositoryMethodOptions): Promise<WorkerTask>;
+  releaseLock(input: ReleaseLockInput, opt: RepositoryWriteOptions): Promise<WorkerTask>;
 
   /**
    * Reset stale tasks to pending status.
    */
-  resetStaleTasks(opt?: RepositoryMethodOptions): Promise<number>;
+  resetStaleTasks(opt?: RepositoryReadOptions): Promise<number>;
 
   /**
    * Count tasks by status.
    */
   countByStatus(
-    status: WorkerTaskStatus,
-    opt?: RepositoryMethodOptions
+    input: CountByStatusInput,
+    opt?: RepositoryReadOptions
   ): Promise<number>;
 
   /**
    * Get task statistics.
    */
-  getStats(opt?: RepositoryMethodOptions): Promise<WorkerTaskStats>;
+  getStats(opt?: RepositoryReadOptions): Promise<WorkerTaskStats>;
 
   /**
    * Delete old completed/failed tasks.
    */
   cleanupOldTasks(
-    olderThanDays: number,
-    opt?: RepositoryMethodOptions
+    input: CleanupOldTasksInput,
+    opt: RepositoryWriteOptions
   ): Promise<number>;
 
   /**
    * Find task by idempotency key.
    */
   findByIdempotencyKey(
-    key: string,
-    opt?: RepositoryMethodOptions
+    input: FindByIdempotencyKeyInput,
+    opt?: RepositoryReadOptions
   ): Promise<WorkerTask | null>;
 
   /**
@@ -113,7 +151,7 @@ export interface WorkerTaskRepository
    */
   createIdempotent(
     data: WorkerTaskCreateData,
-    opt?: RepositoryMethodOptions
+    opt: RepositoryWriteOptions
   ): Promise<CreateTaskResult>;
 }
 

@@ -1,4 +1,3 @@
-import { EntityId } from "../base/types";
 import { WorkerTask, WorkerTaskUpdateData } from "./worker-task";
 
 /**
@@ -10,7 +9,7 @@ declare module "../base/domain-event" {
     "worker-task:created": EntityCreatedEvent<WorkerTask>;
     "worker-task:updated": EntityUpdatedEvent<WorkerTask, WorkerTaskUpdateData>;
     "worker-task:deleted": EntityDeletedEvent<WorkerTask>;
-    "worker-task:preDelete": EntityId;
+    "worker-task:preDelete": EntityPreDeleteEvent;
     "worker-task:started": WorkerTaskStartedEvent;
     "worker-task:completed": WorkerTaskCompletedEvent;
     "worker-task:failed": WorkerTaskFailedEvent;

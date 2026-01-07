@@ -1,4 +1,3 @@
-import { EntityId } from "../../domain/base";
 import {
   WorkerTask,
   WorkerTaskCreateData,
@@ -10,8 +9,16 @@ import {
   AcquireTaskOptions,
   WorkerTaskRepository,
   WorkerTaskStats,
-  RepositoryMethodOptions,
-  CreateTaskResult
+  RepositoryReadOptions,
+  CreateTaskResult,
+  RepositoryWriteOptions,
+  FindPendingInput,
+  MarkCompletedInput,
+  MarkFailedInput,
+  ReleaseLockInput,
+  CountByStatusInput,
+  CleanupOldTasksInput,
+  FindByIdempotencyKeyInput
 } from "../../domain/repository";
 import { DbRepository } from "./db-repository";
 
@@ -78,10 +85,10 @@ export class WorkerTaskDbRepository
   }
 
   async findPending(
-    taskTypes?: string[],
-    limit = 100,
-    opt?: RepositoryMethodOptions
+    input?: FindPendingInput,
+    opt?: RepositoryReadOptions
   ): Promise<WorkerTask[]> {
+    const { taskTypes, limit = 100 } = input || {};
     const now = new Date();
     const query = this.query(opt)
       .where("status", WorkerTaskStatus.PENDING)
@@ -100,7 +107,7 @@ export class WorkerTaskDbRepository
     return items.map((item: WorkerTaskData) => this.toEntity(item));
   }
 
-  async findRunning(opt?: RepositoryMethodOptions): Promise<WorkerTask[]> {
+  async findRunning(opt?: RepositoryReadOptions): Promise<WorkerTask[]> {
     const items = await this.query(opt)
       .where("status", WorkerTaskStatus.RUNNING)
       .orderBy("startedAt", "asc");
@@ -108,7 +115,7 @@ export class WorkerTaskDbRepository
     return items.map((item: WorkerTaskData) => this.toEntity(item));
   }
 
-  async findStaleTasks(opt?: RepositoryMethodOptions): Promise<WorkerTask[]> {
+  async findStaleTasks(opt?: RepositoryReadOptions): Promise<WorkerTask[]> {
     const now = new Date();
     const items = await this.query(opt)
       .where("status", WorkerTaskStatus.RUNNING)
@@ -118,10 +125,10 @@ export class WorkerTaskDbRepository
   }
 
   async markCompleted(
-    id: EntityId,
-    result?: Record<string, unknown>,
-    opt?: RepositoryMethodOptions
+    input: MarkCompletedInput,
+    opt: RepositoryWriteOptions
   ): Promise<WorkerTask> {
+    const { id, result } = input;
     const now = new Date().toISOString();
     const updated = await this.query(opt)
       .where("id", id)
@@ -145,10 +152,10 @@ export class WorkerTaskDbRepository
   }
 
   async markFailed(
-    id: EntityId,
-    error: Error,
-    opt?: RepositoryMethodOptions
+    input: MarkFailedInput,
+    opt: RepositoryWriteOptions
   ): Promise<WorkerTask> {
+    const { id, error } = input;
     const now = new Date().toISOString();
     const task = await this.findById(id, opt);
 
@@ -179,9 +186,10 @@ export class WorkerTaskDbRepository
   }
 
   async releaseLock(
-    id: EntityId,
-    opt?: RepositoryMethodOptions
+    input: ReleaseLockInput,
+    opt: RepositoryWriteOptions
   ): Promise<WorkerTask> {
+    const { id } = input;
     const now = new Date().toISOString();
     const updated = await this.query(opt)
       .where("id", id)
@@ -201,7 +209,7 @@ export class WorkerTaskDbRepository
     return this.toEntity(updated[0]);
   }
 
-  async resetStaleTasks(opt?: RepositoryMethodOptions): Promise<number> {
+  async resetStaleTasks(opt?: RepositoryReadOptions): Promise<number> {
     const now = new Date();
     const result = await this.query(opt)
       .where("status", WorkerTaskStatus.RUNNING)
@@ -218,9 +226,10 @@ export class WorkerTaskDbRepository
   }
 
   async countByStatus(
-    status: WorkerTaskStatus,
-    opt?: RepositoryMethodOptions
+    input: CountByStatusInput,
+    opt?: RepositoryReadOptions
   ): Promise<number> {
+    const { status } = input;
     const result = await this.query(opt)
       .where("status", status)
       .count("id as count")
@@ -229,7 +238,7 @@ export class WorkerTaskDbRepository
     return parseInt(String(result?.count || "0"), 10);
   }
 
-  async getStats(opt?: RepositoryMethodOptions): Promise<WorkerTaskStats> {
+  async getStats(opt?: RepositoryReadOptions): Promise<WorkerTaskStats> {
     const result = await this.query(opt)
       .select("status")
       .count("id as count")
@@ -271,9 +280,10 @@ export class WorkerTaskDbRepository
   }
 
   async cleanupOldTasks(
-    olderThanDays: number,
-    opt?: RepositoryMethodOptions
+    input: CleanupOldTasksInput,
+    opt: RepositoryWriteOptions
   ): Promise<number> {
+    const { olderThanDays } = input;
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
 
@@ -286,9 +296,10 @@ export class WorkerTaskDbRepository
   }
 
   async findByIdempotencyKey(
-    key: string,
-    opt?: RepositoryMethodOptions
+    input: FindByIdempotencyKeyInput,
+    opt?: RepositoryReadOptions
   ): Promise<WorkerTask | null> {
+    const { key } = input;
     const row = await this.query(opt)
       .where("idempotencyKey", key)
       .orderBy("createdAt", "desc")
@@ -299,16 +310,16 @@ export class WorkerTaskDbRepository
 
   async createIdempotent(
     data: WorkerTaskCreateData,
-    opt?: RepositoryMethodOptions
+    opt: RepositoryWriteOptions
   ): Promise<CreateTaskResult> {
     // If no idempotency key, just create normally
     if (!data.idempotencyKey) {
-      const task = await this.create(data, opt || {});
+      const task = await this.create(data, opt);
       return { task, created: true };
     }
 
     // Check for existing task with same key
-    const existing = await this.findByIdempotencyKey(data.idempotencyKey, opt);
+    const existing = await this.findByIdempotencyKey({ key: data.idempotencyKey }, opt);
 
     if (existing) {
       // Return existing task if it's still active (PENDING/RUNNING)

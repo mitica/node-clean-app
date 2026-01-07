@@ -10,8 +10,11 @@ import {
   WorkerTaskPriority,
   WorkerTaskStatus,
 } from "../domain/entity/worker-task";
-import { WorkerTaskRepository } from "../domain/repository";
-import { eventBus } from "../config";
+import {
+  WorkerTaskRepository,
+  RepositoryWriteOptions,
+} from "../domain/repository";
+import { AppContext, eventBus } from "../config";
 import { config } from "../config";
 
 // Import worker task events for type safety
@@ -38,6 +41,7 @@ export class Worker implements IWorker {
   private readonly config: WorkerConfig;
   private readonly handlers: Map<string, TaskHandlerRegistration> = new Map();
   private readonly activeTasks: Map<number, Promise<void>> = new Map();
+  private readonly taskRepo: WorkerTaskRepository;
 
   private running = false;
   private shuttingDown = false;
@@ -52,10 +56,11 @@ export class Worker implements IWorker {
   };
 
   constructor(
-    private readonly taskRepository: WorkerTaskRepository,
+    private readonly ctx: AppContext,
     config?: Partial<WorkerConfig>
   ) {
     this.config = { ...defaultWorkerConfig, ...config };
+    this.taskRepo = ctx.repo.workerTask;
   }
 
   /**
@@ -201,7 +206,7 @@ export class Worker implements IWorker {
       if (this.shuttingDown) break;
 
       try {
-        const task = await this.taskRepository.acquireNextTask({
+        const task = await this.taskRepo.acquireNextTask({
           workerId: this.config.workerId,
           lockDuration: this.config.lockDuration,
           taskTypes: this.config.taskTypes.length
@@ -309,9 +314,9 @@ export class Worker implements IWorker {
     const duration = Date.now() - startTime;
 
     try {
-      const completedTask = await this.taskRepository.markCompleted(
-        task.id,
-        result
+      const completedTask = await this.taskRepo.markCompleted(
+        { id: task.id, result },
+        { ctx: this.ctx }
       );
 
       this.stats.tasksProcessed++;
@@ -342,7 +347,10 @@ export class Worker implements IWorker {
     const duration = Date.now() - startTime;
 
     try {
-      const failedTask = await this.taskRepository.markFailed(task.id, error);
+      const failedTask = await this.taskRepo.markFailed(
+        { id: task.id, error },
+        { ctx: this.ctx }
+      );
       const willRetry = failedTask.status === WorkerTaskStatus.PENDING;
 
       this.stats.tasksProcessed++;
@@ -380,7 +388,7 @@ export class Worker implements IWorker {
    */
   private async resetStaleTasks(): Promise<void> {
     try {
-      const count = await this.taskRepository.resetStaleTasks();
+      const count = await this.taskRepo.resetStaleTasks();
       if (count > 0) {
         console.log(`[Worker] Reset ${count} stale tasks`);
       }
@@ -420,10 +428,11 @@ export interface CreateTaskResult {
  * Helper to create a worker task through the repository with idempotency support
  */
 export async function createWorkerTask(
-  taskRepository: WorkerTaskRepository,
-  options: CreateTaskOptions
+  ctx: AppContext,
+  options: CreateTaskOptions,
+  opt: RepositoryWriteOptions
 ): Promise<CreateTaskResult> {
-  return taskRepository.createIdempotent(
+  return ctx.repo.workerTask.createIdempotent(
     {
       type: options.type,
       payload: options.payload,
@@ -435,6 +444,6 @@ export async function createWorkerTask(
       createdByUserId: options.createdByUserId,
       scheduledAt: options.scheduledAt?.toISOString(),
     },
-    {}
+    opt
   );
 }
