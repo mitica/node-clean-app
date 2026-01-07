@@ -2,7 +2,6 @@
   "compilerOptions": {
     "incremental": true,
     "outDir": "./dist",
-    "baseUrl": "./src",
     "target": "ES2022",
     "module": "nodenext",
     "moduleResolution": "nodenext",

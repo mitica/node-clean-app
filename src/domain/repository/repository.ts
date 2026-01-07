@@ -1,11 +1,5 @@
-import { IDomainEventBus } from "../base/event-bus";
-import {
-  DomainEventName,
-  DomainEventPayload,
-} from "../base/domain-event";
 import {
   BaseEntity,
-  DomainContext,
   EntityData,
   EntityId,
   Validator,
@@ -14,7 +8,11 @@ import {
   EntityConstructor,
   NotFoundError,
   omitFieldsByValue,
+  DomainEventName,
+  DomainEventPayload,
+  IDomainEventBus,
 } from "../base";
+import { DomainContext } from "../context";
 
 export interface RepositoryMethodOptions {
   trx?: unknown;
@@ -127,7 +125,7 @@ export interface RepositoryOptions<TCreate, TUpdate> {
 
 /**
  * Base Repository class. All repository should extend this one.
- * 
+ *
  * Subclasses must:
  * 1. Define event names via `getEventPrefix()` (e.g., "user" → "user:created")
  * 2. Register events in DomainEventRegistry via declaration merging
@@ -331,7 +329,10 @@ export abstract class BaseRepository<
    */
   protected async onCreated(entity: TEntity, opt: TMOptions) {
     const eventName = `${this.getEventPrefix()}:created` as DomainEventName;
-    return this.eventBus.emit(eventName, { entity, opt } as unknown as DomainEventPayload<typeof eventName>);
+    return this.eventBus.emit(eventName, {
+      entity,
+      opt,
+    } as unknown as DomainEventPayload<typeof eventName>);
   }
 
   /**
@@ -340,7 +341,10 @@ export abstract class BaseRepository<
    */
   protected async onDeleted(entity: TEntity, opt: TMOptions) {
     const eventName = `${this.getEventPrefix()}:deleted` as DomainEventName;
-    return this.eventBus.emit(eventName, { entity, opt } as unknown as DomainEventPayload<typeof eventName>);
+    return this.eventBus.emit(eventName, {
+      entity,
+      opt,
+    } as unknown as DomainEventPayload<typeof eventName>);
   }
 
   /**
@@ -349,7 +353,11 @@ export abstract class BaseRepository<
    */
   protected async onUpdated(entity: TEntity, data: TUpdate, opt: TMOptions) {
     const eventName = `${this.getEventPrefix()}:updated` as DomainEventName;
-    return this.eventBus.emit(eventName, { entity, data, opt } as unknown as DomainEventPayload<typeof eventName>);
+    return this.eventBus.emit(eventName, {
+      entity,
+      data,
+      opt,
+    } as unknown as DomainEventPayload<typeof eventName>);
   }
 
   /**
@@ -358,6 +366,9 @@ export abstract class BaseRepository<
    */
   protected async onPreDelete(id: EntityId) {
     const eventName = `${this.getEventPrefix()}:preDelete` as DomainEventName;
-    return this.eventBus.emit(eventName, id as unknown as DomainEventPayload<typeof eventName>);
+    return this.eventBus.emit(
+      eventName,
+      id as unknown as DomainEventPayload<typeof eventName>
+    );
   }
 }

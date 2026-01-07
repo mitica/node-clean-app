@@ -1,4 +1,4 @@
-import { BaseCacheStorage } from "domain/base/cache-storage";
+import { BaseCacheStorage } from "../../domain";
 import { Redis } from "ioredis";
 
 export default class RedisCacheStorage extends BaseCacheStorage {
