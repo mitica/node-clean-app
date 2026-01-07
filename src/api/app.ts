@@ -2,26 +2,28 @@ import { Hono } from "hono";
 import { logger } from "hono/logger";
 import { cors } from "hono/cors";
 import { AppContext } from "../config";
+import { createContextMiddleware } from "./middleware/context-middleware";
 import { authMiddleware } from "./middleware/auth-middleware";
 import { UserController } from "./controllers/user-controller";
+import { HonoEnv } from "./types";
 
 // Register event handlers
 import "../app/listeners";
 
 export class App {
-  private app: Hono;
-  private context: AppContext;
+  private app: Hono<HonoEnv>;
+  private ctx: AppContext;
 
   constructor() {
-    this.app = new Hono();
-    this.context = new AppContext();
+    this.app = new Hono<HonoEnv>();
+    this.ctx = new AppContext();
 
     this.setupMiddleware();
     this.setupRoutes();
   }
 
   async initialize(): Promise<void> {
-    await this.context.initialize();
+    await this.ctx.initialize();
     console.log("Database initialized successfully");
 
     // Start job processor from container
@@ -40,6 +42,11 @@ export class App {
         allowHeaders: ["Content-Type", "Authorization"],
       })
     );
+
+    // Create request context for each request (must be before auth)
+    this.app.use("*", createContextMiddleware(this.ctx));
+
+    // Auth middleware enriches the context with auth info
     this.app.use("*", authMiddleware);
   }
 
@@ -50,7 +57,7 @@ export class App {
     });
 
     // API routes
-    const userController = new UserController(this.context);
+    const userController = new UserController();
     this.app.route("/api/users", userController.getRouter());
 
     // 404 handler
@@ -65,11 +72,11 @@ export class App {
     });
   }
 
-  getApp(): Hono {
+  getApp(): Hono<HonoEnv> {
     return this.app;
   }
 
   async close(): Promise<void> {
-    await this.context.close();
+    await this.ctx.close();
   }
 }

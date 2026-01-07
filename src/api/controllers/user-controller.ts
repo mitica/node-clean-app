@@ -1,17 +1,15 @@
-import { AppContext } from "../../config";
 import { Hono } from "hono";
+import { HonoEnv } from "../types";
 
 export class UserController {
-  private app: Hono;
-  private context: AppContext;
+  private app: Hono<HonoEnv>;
 
-  constructor(context: AppContext) {
-    this.app = new Hono();
-    this.context = context;
+  constructor() {
+    this.app = new Hono<HonoEnv>();
     this.setupRoutes();
   }
 
-  getRouter(): Hono {
+  getRouter(): Hono<HonoEnv> {
     return this.app;
   }
 
@@ -19,9 +17,11 @@ export class UserController {
     // Get user by ID
     this.app.get("/:id", async (c) => {
       try {
-        const id = parseInt(c.req.param("id"), 10);
+        // Get the per-request context from Hono's context
+        const ctx = c.get("requestContext");
 
-        const item = await this.context.repo.user.findById(id);
+        const id = parseInt(c.req.param("id"), 10);
+        const item = await ctx.repo.user.findById(id);
 
         return c.json({ success: true, data: item });
       } catch (error) {

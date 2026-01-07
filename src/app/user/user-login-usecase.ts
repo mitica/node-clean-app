@@ -1,7 +1,7 @@
 import * as bcrypt from "bcryptjs";
 import { User } from "../../domain/entity";
 import { BaseUseCase } from "../../domain/usecase";
-import { AppContext } from "../../config/app-context";
+import { AppContext } from "../../config";
 import { InvalidInputError, RequiredJSONSchema } from "../../domain/base";
 
 export type UserLoginInput = {

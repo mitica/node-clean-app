@@ -1,8 +1,14 @@
 import { config } from "../../config";
-import { Context, Next } from "hono";
+import { Context, Next, MiddlewareHandler } from "hono";
+import { HonoEnv } from "../types";
+import { UserRole } from "../../domain/entity";
 
-export const authMiddleware = async (
-  c: Context,
+/**
+ * Authentication middleware that validates API keys and enriches the request context.
+ * This middleware should run after contextMiddleware.
+ */
+export const authMiddleware: MiddlewareHandler<HonoEnv> = async (
+  c: Context<HonoEnv>,
   next: Next
 ): Promise<Response | void> => {
   // Skip auth for health check endpoint
@@ -13,6 +19,11 @@ export const authMiddleware = async (
 
   if (!config.apiKey && config.nodeEnv === "development") {
     console.warn("API_KEY is not set in development mode");
+    // In development without API key, mark as authenticated but continue
+    const currentCtx = c.get("requestContext");
+    if (currentCtx) {
+      c.set("requestContext", currentCtx.with({ isAuthenticated: true }));
+    }
     await next();
     return;
   }
@@ -67,6 +78,33 @@ export const authMiddleware = async (
     );
   }
 
-  // Token is valid, proceed to next middleware/handler
+  // Token is valid - enrich context with authentication info
+  const currentCtx = c.get("requestContext");
+  // Try to load current user if X-User-ID header is provided
+  // This allows API key auth with user context (e.g., admin acting as user)
+  const userIdHeader = c.req.header("X-User-ID");
+  let enrichedCtx = currentCtx.with({ isAuthenticated: true });
+
+  if (userIdHeader) {
+    const userId = parseInt(userIdHeader, 10);
+    if (!isNaN(userId)) {
+      try {
+        const user = await currentCtx.repo.user.findById(userId);
+        if (user) {
+          enrichedCtx = enrichedCtx.with({
+            userId: user.id,
+            currentUser: user,
+            isAdmin: user.role === UserRole.ADMIN,
+          });
+        }
+      } catch (error) {
+        console.warn(`Failed to load user ${userId}:`, error);
+      }
+    }
+  }
+
+  c.set("requestContext", enrichedCtx);
+
+  // Proceed to next middleware/handler
   await next();
 };

@@ -42,6 +42,7 @@ export class Worker implements IWorker {
   private readonly handlers: Map<string, TaskHandlerRegistration> = new Map();
   private readonly activeTasks: Map<number, Promise<void>> = new Map();
   private readonly taskRepo: WorkerTaskRepository;
+  private readonly ctx: AppContext;
 
   private running = false;
   private shuttingDown = false;
@@ -55,12 +56,21 @@ export class Worker implements IWorker {
     tasksFailed: 0,
   };
 
-  constructor(
-    private readonly ctx: AppContext,
-    config?: Partial<WorkerConfig>
-  ) {
+  constructor(ctx: AppContext, config?: Partial<WorkerConfig>) {
+    this.ctx = ctx;
     this.config = { ...defaultWorkerConfig, ...config };
     this.taskRepo = ctx.repo.workerTask;
+  }
+
+  /**
+   * Create a request context for worker operations.
+   * Workers use a system context since they don't have a user.
+   */
+  private createWorkerContext(): AppContext {
+    return this.ctx.createContext({
+      isAuthenticated: true,
+      isAdmin: true, // Worker has admin privileges for task management
+    });
   }
 
   /**
@@ -316,7 +326,7 @@ export class Worker implements IWorker {
     try {
       const completedTask = await this.taskRepo.markCompleted(
         { id: task.id, result },
-        { ctx: this.ctx }
+        { ctx: this.createWorkerContext() }
       );
 
       this.stats.tasksProcessed++;
@@ -349,7 +359,7 @@ export class Worker implements IWorker {
     try {
       const failedTask = await this.taskRepo.markFailed(
         { id: task.id, error },
-        { ctx: this.ctx }
+        { ctx: this.createWorkerContext() }
       );
       const willRetry = failedTask.status === WorkerTaskStatus.PENDING;
 

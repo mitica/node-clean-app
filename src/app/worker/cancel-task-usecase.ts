@@ -1,5 +1,5 @@
 import { BaseUseCase } from "../../domain/usecase";
-import { AppContext } from "../../config/app-context";
+import { AppContext } from "../../config";
 import { RequiredJSONSchema, EntityId } from "../../domain/base";
 import { WorkerTask, WorkerTaskStatus } from "../../domain/entity/worker-task";
 
