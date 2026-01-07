@@ -1,4 +1,4 @@
-import { UserLoginUseCase } from "../application/user/user-login-usecase";
+import { UserLoginUseCase } from "../app/user/user-login-usecase";
 
 export interface UseCaseContainer {
   login: UserLoginUseCase;

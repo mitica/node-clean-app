@@ -25,7 +25,7 @@ This project provides a scalable, maintainable starting point for Node.js backen
 ```
 src/
 	index.ts                # Entry point
-	application/            # Use cases, business logic
+	app/            # Use cases, business logic
 		user/
 			user-login-usecase.ts
 	config/                 # App configuration and context
@@ -34,7 +34,7 @@ src/
 			user.ts
 		repository/
 			user-repository.ts
-	infrastructure/         # Database, cache, external services
+	infra/         # Database, cache, external services
 		database/
 			db.ts
 			migrations/
@@ -46,7 +46,7 @@ src/
 				drop-cache.ts
 		repository/
 			db-user-repository.ts
-	presentation/           # HTTP layer, controllers, middleware
+	api/           # HTTP layer, controllers, middleware
 		app.ts
 		controllers/
 			user-controller.ts
@@ -148,10 +148,10 @@ See `package.json` for all available scripts, including:
 ## Extending the Template
 
 - Add new domain entities in `src/domain/entity/`
-- Implement new repositories in `src/domain/repository/` and `src/infrastructure/repository/`
-- Create new use cases in `src/application/`
-- Add controllers and routes in `src/presentation/controllers/`
-- Configure middleware in `src/presentation/middleware/`
+- Implement new repositories in `src/domain/repository/` and `src/infra/repository/`
+- Create new use cases in `src/app/`
+- Add controllers and routes in `src/api/controllers/`
+- Configure middleware in `src/api/middleware/`
 
 ## Domain Event Bus
 

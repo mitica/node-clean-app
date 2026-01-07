@@ -1,9 +1,9 @@
-import { dbInstance } from "../infrastructure/database/db";
+import { dbInstance } from "../infra/database/db";
 import { EntityId } from "../domain/base";
 import { DomainContext } from "../domain/context";
 import { getRepoContainer, RepoContainer } from "./repo";
 import { getUseCaseContainer, UseCaseContainer } from "./usecase";
-import { redisInstance } from "../infrastructure/database/redis";
+import { redisInstance } from "../infra/database/redis";
 
 export class AppContext implements DomainContext {
   userId?: EntityId;

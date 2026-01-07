@@ -1,4 +1,4 @@
-import { UserDbRepository } from "../infrastructure/repository/db-user-repository";
+import { UserDbRepository } from "../infra/repository/db-user-repository";
 import { UserRepository } from "../domain/repository/user-repository";
 
 export interface RepoContainer {
