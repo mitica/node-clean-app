@@ -1,7 +1,8 @@
 import {
   BaseRepository,
-  RepositoryMethodOptions,
+  RepositoryReadOptions,
   RepositoryOptions,
+  RepositoryWriteOptions,
 } from "../../domain/repository";
 import {
   EntityId,
@@ -31,20 +32,12 @@ export abstract class DbRepository<
   TEntity extends BaseEntity<TData> = BaseEntity<TData>,
   TCreate extends EntityCreateData<EntityData> = EntityCreateData<TData>,
   TUpdate extends EntityUpdateData<TData> = EntityUpdateData<TData>,
-  TMOptions extends RepositoryMethodOptions = RepositoryMethodOptions,
   TOptions extends DbRepositoryOptions<
     TData,
     TCreate,
     TUpdate
   > = DbRepositoryOptions<TData, TCreate, TUpdate>
-> extends BaseRepository<
-  TData,
-  TEntity,
-  TCreate,
-  TUpdate,
-  TMOptions,
-  TOptions
-> {
+> extends BaseRepository<TData, TEntity, TCreate, TUpdate, TOptions> {
   protected readonly knex = dbInstance();
   protected readonly tableName: string;
   // protected readonly isLangTable: boolean;
@@ -75,7 +68,7 @@ export abstract class DbRepository<
     return this.tableName;
   }
 
-  protected query(opt?: TMOptions) {
+  protected query(opt?: RepositoryReadOptions) {
     const query = this.knex(this.getTableName());
     const r = opt?.trx ? query.transacting(opt?.trx as never) : query;
     (r as any).state = {};
@@ -86,7 +79,10 @@ export abstract class DbRepository<
     return this.knex.transaction<T>(scope);
   }
 
-  async deleteByIds(ids: EntityId[], ops: TMOptions): Promise<number> {
+  async deleteByIds(
+    ids: EntityId[],
+    ops: RepositoryWriteOptions
+  ): Promise<number> {
     const items = await this.query(ops)
       .whereIn("id", ids)
       .delete()
@@ -96,14 +92,17 @@ export abstract class DbRepository<
 
   protected async innerDelete(
     id: EntityId,
-    opt: TMOptions
+    opt: RepositoryWriteOptions
   ): Promise<TEntity | null> {
     const result = await this.query(opt).where({ id }).delete().returning("*");
 
     return result.length ? this.toEntity(result[0]) : null;
   }
 
-  protected async innerCreate(data: TCreate, opt: TMOptions): Promise<TEntity> {
+  protected async innerCreate(
+    data: TCreate,
+    opt: RepositoryWriteOptions
+  ): Promise<TEntity> {
     // if ("coordinates" in data && Array.isArray(data.coordinates)) {
     //   data.coordinates = this.knex.raw("POINT(?, ?)", data.coordinates);
     // } else if (
@@ -122,7 +121,10 @@ export abstract class DbRepository<
     return this.toEntity(model[0]);
   }
 
-  protected async innerUpdate(data: TUpdate, opt: TMOptions): Promise<TEntity> {
+  protected async innerUpdate(
+    data: TUpdate,
+    opt: RepositoryWriteOptions
+  ): Promise<TEntity> {
     const { id, ...rest } = data;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData = rest as any;
@@ -170,20 +172,23 @@ export abstract class DbRepository<
 
   public async findById(
     id: EntityId,
-    opt?: TMOptions
+    opt?: RepositoryReadOptions
   ): Promise<TEntity | null> {
     const model = await this.query(opt).where({ id }).first();
 
     return model ? this.toEntity(model) : null;
   }
 
-  async existsById(id: EntityId, opt?: TMOptions) {
+  async existsById(id: EntityId, opt?: RepositoryReadOptions) {
     const model = await this.query(opt).where({ id }).select("id").first();
 
     return !!model;
   }
 
-  public async findByIds(ids: EntityId[], opt?: TMOptions): Promise<TEntity[]> {
+  public async findByIds(
+    ids: EntityId[],
+    opt?: RepositoryReadOptions
+  ): Promise<TEntity[]> {
     if (ids.length === 0) return [];
 
     const models = await this.query(opt).whereIn("id", ids);
@@ -191,22 +196,25 @@ export abstract class DbRepository<
     return this.toEntities(models);
   }
 
-  public async deleteAll(opt: TMOptions): Promise<number> {
+  public async deleteAll(opt: RepositoryWriteOptions): Promise<number> {
     const items = await this.query(opt).delete().returning("*");
     return this.onDeletedItems(items, opt);
   }
 
-  public async totalCount(opt?: TMOptions): Promise<number> {
+  public async totalCount(opt?: RepositoryReadOptions): Promise<number> {
     return this.query(opt).count("id");
   }
 
-  public async getAllIds(opt?: TMOptions): Promise<EntityId[]> {
+  public async getAllIds(opt?: RepositoryReadOptions): Promise<EntityId[]> {
     return this.query(opt)
       .select("id")
       .then((rows) => rows.map((it) => it.id));
   }
 
-  protected async onDeletedItems(items: TEntity[], opt: TMOptions) {
+  protected async onDeletedItems(
+    items: TEntity[],
+    opt: RepositoryWriteOptions
+  ) {
     await Promise.all(items.map((item) => this.onDeleted(item, opt)));
     return items.length;
   }

@@ -15,7 +15,7 @@ export class TypedEventEmitter<EventDataMap extends TypedEventEmitterEvents> {
     eventName: Name,
     listener: (eventData: EventDataMap[Name]) => any
   ): this {
-    this._emitter.on(eventName as any, listener as any);
+    this._emitter.on(eventName, listener);
     return this;
   }
 
@@ -23,20 +23,20 @@ export class TypedEventEmitter<EventDataMap extends TypedEventEmitterEvents> {
     eventName: Name,
     listener: (eventData: EventDataMap[Name]) => any
   ): Promise<void> {
-    await this._emitter.once(eventName as any, listener as any);
+    await this._emitter.once(eventName, listener);
   }
 
   off<Name extends keyof EventDataMap>(
     eventName: Name,
     listener: (eventData: EventDataMap[Name]) => any
   ): void {
-    this._emitter.off(eventName as any, listener as any);
+    this._emitter.off(eventName, listener);
   }
 
   async emit<Name extends keyof EventDataMap>(
     eventName: Name,
     eventData: EventDataMap[Name]
   ): Promise<void> {
-    await this._emitter.emit(eventName as any, eventData);
+    await this._emitter.emit(eventName, eventData);
   }
 }

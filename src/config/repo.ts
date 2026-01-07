@@ -1,13 +1,17 @@
-import { UserDbRepository } from "../infrastructure/repository/db-user-repository";
+import { UserDbRepository } from "../infra/repository/db-user-repository";
+import { WorkerTaskDbRepository } from "../infra/repository/db-worker-task-repository";
 import { UserRepository } from "../domain/repository/user-repository";
+import { WorkerTaskRepository } from "../domain/repository/worker-task-repository";
 
 export interface RepoContainer {
   user: UserRepository;
+  workerTask: WorkerTaskRepository;
 }
 
 export const createRepoContainer = (): RepoContainer => {
   return {
-    user: new UserDbRepository()
+    user: new UserDbRepository(),
+    workerTask: new WorkerTaskDbRepository()
   };
 };
 

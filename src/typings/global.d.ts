@@ -1,4 +1,5 @@
 import { type Knex } from "knex";
+import { AppContext } from "../config";
 
 // var redisInstance: Redis;
 var knexInstance: Knex;

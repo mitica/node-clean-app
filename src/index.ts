@@ -1,5 +1,5 @@
 import { serve } from '@hono/node-server';
-import { App } from './presentation/app';
+import { App } from './api/app';
 import { config } from './config';
 
 async function createDataDirectories(): Promise<void> {

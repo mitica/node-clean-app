@@ -1,4 +1,3 @@
-import { EntityId } from "../base/types";
 import { User, UserUpdateData } from "./user";
 
 /**
@@ -10,7 +9,7 @@ declare module "../base/domain-event" {
     "user:created": EntityCreatedEvent<User>;
     "user:updated": EntityUpdatedEvent<User, UserUpdateData>;
     "user:deleted": EntityDeletedEvent<User>;
-    "user:preDelete": EntityId;
+    "user:preDelete": EntityPreDeleteEvent;
   }
 }
 

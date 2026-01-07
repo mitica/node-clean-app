@@ -1,10 +1,6 @@
 import { EntityId } from "./types";
-import {
-  BaseEntity,
-  EntityData,
-  EntityUpdateData,
-} from "./entity";
-import { RepositoryMethodOptions } from "../repository/repository";
+import { BaseEntity, EntityData, EntityUpdateData } from "./entity";
+import { RepositoryWriteOptions } from "../repository";
 
 /**
  * Global Domain Event Registry - extend via declaration merging.
@@ -67,7 +63,7 @@ export interface EntityCreatedEvent<
   TEntity extends BaseEntity<EntityData> = BaseEntity<EntityData>
 > {
   entity: TEntity;
-  opt?: RepositoryMethodOptions;
+  opt: RepositoryWriteOptions;
 }
 
 export interface EntityUpdatedEvent<
@@ -76,17 +72,20 @@ export interface EntityUpdatedEvent<
 > {
   entity: TEntity;
   data: TUpdate;
-  opt?: RepositoryMethodOptions;
+  opt: RepositoryWriteOptions;
 }
 
 export interface EntityDeletedEvent<
   TEntity extends BaseEntity<EntityData> = BaseEntity<EntityData>
 > {
   entity: TEntity;
-  opt?: RepositoryMethodOptions;
+  opt: RepositoryWriteOptions;
 }
 
-export type EntityPreDeleteEvent = EntityId;
+export interface EntityPreDeleteEvent {
+  entityId: EntityId;
+  opt: RepositoryWriteOptions;
+}
 
 // ============================================
 // Helper type for repository event names

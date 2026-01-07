@@ -14,104 +14,116 @@ import {
 } from "../base";
 import { DomainContext } from "../context";
 
-export interface RepositoryMethodOptions {
+export interface RepositoryReadOptions {
   trx?: unknown;
   cache?: boolean;
   ctx?: DomainContext;
+}
+
+export interface RepositoryWriteOptions extends RepositoryReadOptions {
+  ctx: DomainContext;
 }
 
 export interface Repository<
   TData extends EntityData = EntityData,
   TEntity extends BaseEntity<TData> = BaseEntity<TData>,
   TCreate extends EntityCreateData<EntityData> = EntityCreateData<TData>,
-  TUpdate extends EntityUpdateData<TData> = EntityUpdateData<TData>,
-  TMOptions extends RepositoryMethodOptions = RepositoryMethodOptions
+  TUpdate extends EntityUpdateData<TData> = EntityUpdateData<TData>
 > {
   /**
    * Delete an entity by id.
    * @param id Entity id to be deleted
    */
-  deleteById(id: EntityId, opt: TMOptions): Promise<TEntity | null>;
+  deleteById(
+    id: EntityId,
+    opt: RepositoryWriteOptions
+  ): Promise<TEntity | null>;
 
   /**
    * Delete an entity by ids.
    * @param ids Entities id to be deleted
    */
-  deleteByIds(ids: EntityId[], opt: TMOptions): Promise<number>;
+  deleteByIds(ids: EntityId[], opt: RepositoryWriteOptions): Promise<number>;
 
   /**
    * Create a new entity.
    * @param data Entity data
    */
-  create(data: TCreate, opt: TMOptions): Promise<TEntity>;
+  create(data: TCreate, opt: RepositoryWriteOptions): Promise<TEntity>;
 
   /**
    * Create name entities.
    * @param data Entity data
    */
-  createMany(data: TCreate[], opt: TMOptions): Promise<TEntity[]>;
+  createMany(data: TCreate[], opt: RepositoryWriteOptions): Promise<TEntity[]>;
 
   /**
    * Find or create a new entity.
    * @param data Entity data
    */
-  findOrCreate(data: TCreate, opt: TMOptions): Promise<TEntity>;
+  findOrCreate(data: TCreate, opt: RepositoryWriteOptions): Promise<TEntity>;
 
-  findOrCreateMany(data: TCreate[], opt: TMOptions): Promise<TEntity[]>;
+  findOrCreateMany(
+    data: TCreate[],
+    opt: RepositoryWriteOptions
+  ): Promise<TEntity[]>;
 
   /**
    * Update an existing entity.
    * @param data Entity update data
    */
-  update(data: TUpdate, opt: TMOptions): Promise<TEntity>;
+  update(data: TUpdate, opt: RepositoryWriteOptions): Promise<TEntity>;
 
   /**
    * Create or update an entity.
    * @param data Entity data
    */
-  createOrUpdate(data: TCreate, opt: TMOptions): Promise<TEntity>;
+  createOrUpdate(data: TCreate, opt: RepositoryWriteOptions): Promise<TEntity>;
 
   /**
    * Find unique entity.
    * @param data Entity data
    */
-  findUnique(data: TCreate, opt?: TMOptions): Promise<TEntity | null>;
+  findUnique(
+    data: TCreate,
+    opt?: RepositoryReadOptions
+  ): Promise<TEntity | null>;
 
   /**
    * Get an entity by id.
    * @param id Entity id
    */
-  findById(id: EntityId, opt?: TMOptions): Promise<TEntity | null>;
+  findById(id: EntityId, opt?: RepositoryReadOptions): Promise<TEntity | null>;
 
   /**
    * Check exists by id.
    * @param id Entity id
    */
-  existsById(id: EntityId, opt?: TMOptions): Promise<boolean>;
+  existsById(id: EntityId, opt?: RepositoryReadOptions): Promise<boolean>;
 
   /**
    * Check entity by id.
    * @param id Entity id
    */
-  checkById(id: EntityId, opt?: TMOptions): Promise<TEntity>;
+  checkById(id: EntityId, opt?: RepositoryReadOptions): Promise<TEntity>;
 
   /**
    * Get an entitis by ids.
    * @param ids Entity ids
    */
-  findByIds(ids: EntityId[], opt?: TMOptions): Promise<TEntity[]>;
+  findByIds(ids: EntityId[], opt?: RepositoryReadOptions): Promise<TEntity[]>;
 
   /**
    * Deletes all entities.
    */
-  deleteAll(opt: TMOptions): Promise<number>;
+  deleteAll(opt: RepositoryWriteOptions): Promise<number>;
 
   /**
    * Total items count
    */
-  totalCount(opt?: TMOptions): Promise<number>;
+  totalCount(opt?: RepositoryReadOptions): Promise<number>;
 
-  getAllIds(opt?: TMOptions): Promise<EntityId[]>;
+  getAllIds(opt?: RepositoryReadOptions): Promise<EntityId[]>;
 
   /** create transaction */
   transaction<T>(scope: (trx: unknown) => Promise<T> | void): Promise<T>;
@@ -136,7 +148,6 @@ export abstract class BaseRepository<
   TEntity extends BaseEntity<TData> = BaseEntity<TData>,
   TCreate extends EntityCreateData<EntityData> = EntityCreateData<TData>,
   TUpdate extends EntityUpdateData<TData> = EntityUpdateData<TData>,
-  TMOptions extends RepositoryMethodOptions = RepositoryMethodOptions,
   TOptions extends RepositoryOptions<TCreate, TUpdate> = RepositoryOptions<
     TCreate,
     TUpdate
@@ -159,12 +170,18 @@ export abstract class BaseRepository<
    */
   protected abstract getEventPrefix(): string;
 
-  abstract existsById(id: EntityId, opt?: TMOptions): Promise<boolean>;
+  abstract existsById(
+    id: EntityId,
+    opt?: RepositoryReadOptions
+  ): Promise<boolean>;
 
   abstract transaction<T>(
     scope: (trx: unknown) => Promise<T> | void
   ): Promise<T>;
-  abstract deleteByIds(ids: EntityId[], opt: TMOptions): Promise<number>;
+  abstract deleteByIds(
+    ids: EntityId[],
+    opt: RepositoryWriteOptions
+  ): Promise<number>;
 
   getEntityName(): string {
     return this.entityBuilder.name;
@@ -182,11 +199,8 @@ export abstract class BaseRepository<
     return this.getEntityName();
   }
 
-  async checkById(id: EntityId, opt?: TMOptions): Promise<TEntity> {
-    const entity = await this.findById(id, {
-      ...opt,
-      cache: false,
-    } as TMOptions);
+  async checkById(id: EntityId, opt?: RepositoryReadOptions): Promise<TEntity> {
+    const entity = await this.findById(id, { ...opt, cache: false });
     if (!entity)
       throw new NotFoundError(`${this.getEntityName()} ${id} not found!`);
     return entity;
@@ -205,12 +219,12 @@ export abstract class BaseRepository<
     return true;
   }
 
-  public async deleteById(id: EntityId, opt: TMOptions) {
+  public async deleteById(id: EntityId, opt: RepositoryWriteOptions) {
     if (!(await this.preDelete(id))) {
       return null;
     }
 
-    await this.onPreDelete(id);
+    await this.onPreDelete(id, opt);
 
     const entity = await this.innerDelete(id, opt);
     if (entity) await this.onDeleted(entity, opt);
@@ -220,7 +234,7 @@ export abstract class BaseRepository<
 
   protected abstract innerDelete(
     id: EntityId,
-    opt: TMOptions
+    opt: RepositoryWriteOptions
   ): Promise<TEntity | null>;
 
   /**
@@ -234,7 +248,10 @@ export abstract class BaseRepository<
     return data;
   }
 
-  public async create(data: TCreate, opt: TMOptions): Promise<TEntity> {
+  public async create(
+    data: TCreate,
+    opt: RepositoryWriteOptions
+  ): Promise<TEntity> {
     data = await this.preCreate(data);
     const entity = await this.innerCreate(data, opt);
 
@@ -243,13 +260,16 @@ export abstract class BaseRepository<
     return entity;
   }
 
-  public async createMany(data: TCreate[], opt: TMOptions): Promise<TEntity[]> {
+  public async createMany(
+    data: TCreate[],
+    opt: RepositoryWriteOptions
+  ): Promise<TEntity[]> {
     return Promise.all(data.map((item) => this.create(item, opt)));
   }
 
   protected abstract innerCreate(
     data: TCreate,
-    opt?: TMOptions
+    opt?: RepositoryWriteOptions
   ): Promise<TEntity>;
 
   /**
@@ -264,7 +284,10 @@ export abstract class BaseRepository<
     return data;
   }
 
-  public async update(data: TUpdate, opt: TMOptions): Promise<TEntity> {
+  public async update(
+    data: TUpdate,
+    opt: RepositoryWriteOptions
+  ): Promise<TEntity> {
     data = await this.preUpdate(data);
     const entity = await this.innerUpdate(data, opt);
 
@@ -275,32 +298,33 @@ export abstract class BaseRepository<
 
   protected abstract innerUpdate(
     data: TUpdate,
-    opt: TMOptions
+    opt: RepositoryWriteOptions
   ): Promise<TEntity>;
   public abstract findById(
     id: EntityId,
-    opt?: TMOptions
+    opt?: RepositoryReadOptions
   ): Promise<TEntity | null>;
   public abstract findByIds(
     ids: EntityId[],
-    opt?: TMOptions
+    opt?: RepositoryReadOptions
   ): Promise<TEntity[]>;
 
   public async findUnique(
     data: TCreate,
-    opt?: TMOptions
+    opt?: RepositoryReadOptions
   ): Promise<TEntity | null> {
-    return data.id
-      ? this.findById(data.id, { ...opt, cache: false } as TMOptions)
-      : null;
+    return data.id ? this.findById(data.id, { ...opt, cache: false }) : null;
   }
 
-  public async findOrCreate(data: TCreate, opt: TMOptions) {
+  public async findOrCreate(data: TCreate, opt: RepositoryWriteOptions) {
     const existingEntity = await this.findUnique(data, opt);
     return existingEntity ? existingEntity : await this.create(data, opt);
   }
 
-  async findOrCreateMany(data: TCreate[], opt: TMOptions): Promise<TEntity[]> {
+  async findOrCreateMany(
+    data: TCreate[],
+    opt: RepositoryWriteOptions
+  ): Promise<TEntity[]> {
     const output: TEntity[] = [];
     for (const item of data) {
       output.push(await this.findOrCreate(item, opt));
@@ -308,7 +332,10 @@ export abstract class BaseRepository<
     return output;
   }
 
-  public async createOrUpdate(data: TCreate, opt: TMOptions): Promise<TEntity> {
+  public async createOrUpdate(
+    data: TCreate,
+    opt: RepositoryWriteOptions
+  ): Promise<TEntity> {
     const exists = await this.findUnique(data);
     if (exists) {
       return exists.dataIsEqual(data)
@@ -319,15 +346,15 @@ export abstract class BaseRepository<
     return this.create(data, opt);
   }
 
-  public abstract deleteAll(opt: TMOptions): Promise<number>;
-  public abstract totalCount(opt?: TMOptions): Promise<number>;
-  public abstract getAllIds(opt?: TMOptions): Promise<EntityId[]>;
+  public abstract deleteAll(opt: RepositoryWriteOptions): Promise<number>;
+  public abstract totalCount(opt?: RepositoryReadOptions): Promise<number>;
+  public abstract getAllIds(opt?: RepositoryReadOptions): Promise<EntityId[]>;
 
   /**
    * Fire entity created event.
    * Event name: `${prefix}:created`
    */
-  protected async onCreated(entity: TEntity, opt: TMOptions) {
+  protected async onCreated(entity: TEntity, opt: RepositoryWriteOptions) {
     const eventName = `${this.getEventPrefix()}:created` as DomainEventName;
     return this.eventBus.emit(eventName, {
       entity,
@@ -339,7 +366,7 @@ export abstract class BaseRepository<
    * Fire entity deleted event.
    * Event name: `${prefix}:deleted`
    */
-  protected async onDeleted(entity: TEntity, opt: TMOptions) {
+  protected async onDeleted(entity: TEntity, opt: RepositoryWriteOptions) {
     const eventName = `${this.getEventPrefix()}:deleted` as DomainEventName;
     return this.eventBus.emit(eventName, {
       entity,
@@ -351,7 +378,11 @@ export abstract class BaseRepository<
    * Fire entity updated event.
    * Event name: `${prefix}:updated`
    */
-  protected async onUpdated(entity: TEntity, data: TUpdate, opt: TMOptions) {
+  protected async onUpdated(
+    entity: TEntity,
+    data: TUpdate,
+    opt: RepositoryWriteOptions
+  ) {
     const eventName = `${this.getEventPrefix()}:updated` as DomainEventName;
     return this.eventBus.emit(eventName, {
       entity,
@@ -364,11 +395,11 @@ export abstract class BaseRepository<
    * Fire pre-delete event.
    * Event name: `${prefix}:preDelete`
    */
-  protected async onPreDelete(id: EntityId) {
+  protected async onPreDelete(id: EntityId, opt: RepositoryWriteOptions) {
     const eventName = `${this.getEventPrefix()}:preDelete` as DomainEventName;
-    return this.eventBus.emit(
-      eventName,
-      id as unknown as DomainEventPayload<typeof eventName>
-    );
+    return this.eventBus.emit(eventName, {
+      entityId: id,
+      opt,
+    } as unknown as DomainEventPayload<typeof eventName>);
   }
 }
