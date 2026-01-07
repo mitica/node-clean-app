@@ -12,11 +12,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - EventBus implementation for domain event handling
 - Event handlers registration system
 - User event listeners
+- Centralized error handler middleware for consistent API error responses
+- `asyncHandler` wrapper utility to eliminate try-catch boilerplate in controllers
+- `HttpError` class for custom HTTP status codes
+- Comprehensive error handling documentation ([ERROR_HANDLING.md](src/api/ERROR_HANDLING.md))
 
 ### Changed
 
 - Refactored EventBus architecture for better extensibility
 - Fixed EventEmitter implementation
+- Refactored API error handling to use centralized error handler
+- Updated all controllers to use `asyncHandler` wrapper
+- Updated auth middleware to throw domain errors instead of returning JSON responses
+- Simplified error handling logic across all API endpoints
+- Improved error response consistency with standardized format
+
+### Removed
+
+- Duplicate `handleError` methods from individual controllers
+- Redundant try-catch blocks in route handlers
 
 ## [0.1.0] - 2025-09-16
 

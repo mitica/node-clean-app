@@ -3,6 +3,7 @@ import { Context, Next, MiddlewareHandler } from "hono";
 import { HonoEnv } from "../types";
 import { UserRole } from "../../domain/entity";
 import { verifyAccessToken } from "../../infra/services/jwt";
+import { UnauthorizedError } from "../../domain/base/errors";
 
 /**
  * Authentication middleware that validates JWT tokens and enriches the request context.
@@ -51,13 +52,7 @@ export const authMiddleware: MiddlewareHandler<HonoEnv> = async (
     return;
   }
 
-  return c.json(
-    {
-      success: false,
-      error: "Authorization header is required",
-    },
-    401
-  );
+  throw new UnauthorizedError("Authorization header is required");
 };
 
 /**
@@ -78,23 +73,11 @@ async function handleApiKeyAuth(
       await next();
       return;
     }
-    return c.json(
-      {
-        success: false,
-        error: "Server configuration error: API key not configured",
-      },
-      500
-    );
+    throw new Error("Server configuration error: API key not configured");
   }
 
   if (apiKey !== config.apiKey) {
-    return c.json(
-      {
-        success: false,
-        error: "Invalid API key",
-      },
-      401
-    );
+    throw new UnauthorizedError("Invalid API key");
   }
 
   // API Key is valid - mark as authenticated (admin-level access)
@@ -121,12 +104,8 @@ async function handleJwtAuth(
   // Validate Bearer token format
   const tokenMatch = authHeader.match(/^Bearer\s+(.+)$/);
   if (!tokenMatch) {
-    return c.json(
-      {
-        success: false,
-        error: "Authorization header must be in format: Bearer <token>",
-      },
-      401
+    throw new UnauthorizedError(
+      "Authorization header must be in format: Bearer <token>"
     );
   }
 
@@ -134,15 +113,14 @@ async function handleJwtAuth(
   const result = verifyAccessToken(token);
 
   if (!result.valid) {
-    const statusCode = result.error === "expired" ? 401 : 401;
-    return c.json(
-      {
-        success: false,
-        error: result.message,
-        code: result.error === "expired" ? "TOKEN_EXPIRED" : "INVALID_TOKEN",
-      },
-      statusCode
-    );
+    const error = new UnauthorizedError(result.message);
+    // Add error code for token expiration
+    if (result.error === "expired") {
+      (error as any).code = "TOKEN_EXPIRED";
+    } else {
+      (error as any).code = "INVALID_TOKEN";
+    }
+    throw error;
   }
 
   // Token is valid - load user and enrich context
@@ -156,14 +134,9 @@ async function handleJwtAuth(
     const user = await currentCtx.repo.user.findById(userId);
 
     if (!user) {
-      return c.json(
-        {
-          success: false,
-          error: "User not found",
-          code: "USER_NOT_FOUND",
-        },
-        401
-      );
+      const error = new UnauthorizedError("User not found");
+      (error as any).code = "USER_NOT_FOUND";
+      throw error;
     }
 
     c.set(
@@ -178,13 +151,12 @@ async function handleJwtAuth(
 
     await next();
   } catch (error) {
+    // Re-throw UnauthorizedError as-is
+    if (error instanceof UnauthorizedError) {
+      throw error;
+    }
+    // Wrap other errors
     console.error("Failed to load user from token:", error);
-    return c.json(
-      {
-        success: false,
-        error: "Failed to authenticate user",
-      },
-      500
-    );
+    throw new Error("Failed to authenticate user");
   }
 }

@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { HonoEnv } from "../types";
-import { DomainError } from "../../domain/base";
+import { asyncHandler } from "../middleware/error-handler";
 
 /**
  * Auth Controller - Handles authentication endpoints.
@@ -24,57 +24,49 @@ export class AuthController {
 
   private setupRoutes(): void {
     // Login endpoint
-    this.app.post("/login", async (c) => {
-      try {
-        const ctx = c.get("requestContext");
-        const body = await c.req.json<{ email: string; password: string }>();
+    this.app.post("/login", asyncHandler(async (c) => {
+      const ctx = c.get("requestContext");
+      const body = await c.req.json<{ email: string; password: string }>();
 
-        const result = await ctx.usecase.login.execute(
-          {
-            email: body.email,
-            password: body.password,
-          },
-          ctx
-        );
+      const result = await ctx.usecase.login.execute(
+        {
+          email: body.email,
+          password: body.password,
+        },
+        ctx
+      );
 
-        return c.json({
-          success: true,
-          data: {
-            user: {
-              id: result.user.id,
-              email: result.user.email,
-              name: result.user.name,
-              role: result.user.role,
-            },
-            tokens: result.tokens,
+      return c.json({
+        success: true,
+        data: {
+          user: {
+            id: result.user.id,
+            email: result.user.email,
+            name: result.user.name,
+            role: result.user.role,
           },
-        });
-      } catch (error) {
-        return this.handleError(c, error);
-      }
-    });
+          tokens: result.tokens,
+        },
+      });
+    }));
 
     // Refresh token endpoint
-    this.app.post("/refresh", async (c) => {
-      try {
-        const ctx = c.get("requestContext");
-        const body = await c.req.json<{ refreshToken: string }>();
+    this.app.post("/refresh", asyncHandler(async (c) => {
+      const ctx = c.get("requestContext");
+      const body = await c.req.json<{ refreshToken: string }>();
 
-        const result = await ctx.usecase.refreshToken.execute(
-          { refreshToken: body.refreshToken },
-          ctx
-        );
+      const result = await ctx.usecase.refreshToken.execute(
+        { refreshToken: body.refreshToken },
+        ctx
+      );
 
-        return c.json({
-          success: true,
-          data: {
-            tokens: result.tokens,
-          },
-        });
-      } catch (error) {
-        return this.handleError(c, error);
-      }
-    });
+      return c.json({
+        success: true,
+        data: {
+          tokens: result.tokens,
+        },
+      });
+    }));
 
     // Logout endpoint (client should discard tokens)
     // In a production app, you might want to maintain a token blacklist
@@ -88,68 +80,30 @@ export class AuthController {
     });
 
     // Get current user info (requires authentication)
-    this.app.get("/me", async (c) => {
-      try {
-        const ctx = c.get("requestContext");
+    this.app.get("/me", asyncHandler(async (c) => {
+      const ctx = c.get("requestContext");
 
-        if (!ctx.isAuthenticated || !ctx.currentUser) {
-          return c.json(
-            {
-              success: false,
-              error: "Authentication required",
-            },
-            401
-          );
-        }
-
-        return c.json({
-          success: true,
-          data: {
-            id: ctx.currentUser.id,
-            email: ctx.currentUser.email,
-            name: ctx.currentUser.name,
-            role: ctx.currentUser.role,
-            isEmailVerified: ctx.currentUser.isEmailVerified,
-            lastLoginAt: ctx.currentUser.lastLoginAt,
+      if (!ctx.isAuthenticated || !ctx.currentUser) {
+        return c.json(
+          {
+            success: false,
+            error: "Authentication required",
           },
-        });
-      } catch (error) {
-        return this.handleError(c, error);
+          401
+        );
       }
-    });
-  }
 
-  private handleError(c: Hono<HonoEnv>["request"]["prototype"], error: unknown) {
-    if (error instanceof DomainError) {
-      const statusCode = error.httpStatus || 400;
-      return c.json(
-        {
-          success: false,
-          error: error.message,
-          code: error.errorCode,
+      return c.json({
+        success: true,
+        data: {
+          id: ctx.currentUser.id,
+          email: ctx.currentUser.email,
+          name: ctx.currentUser.name,
+          role: ctx.currentUser.role,
+          isEmailVerified: ctx.currentUser.isEmailVerified,
+          lastLoginAt: ctx.currentUser.lastLoginAt,
         },
-        statusCode as 400
-      );
-    }
-
-    if (error instanceof Error) {
-      console.error("Auth error:", error);
-      return c.json(
-        {
-          success: false,
-          error: error.message,
-        },
-        400
-      );
-    }
-
-    console.error("Unknown auth error:", error);
-    return c.json(
-      {
-        success: false,
-        error: "Internal server error",
-      },
-      500
-    );
+      });
+    }));
   }
 }

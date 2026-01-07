@@ -4,6 +4,7 @@ import { cors } from "hono/cors";
 import { AppContext } from "../config";
 import { createContextMiddleware } from "./middleware/context-middleware";
 import { authMiddleware } from "./middleware/auth-middleware";
+import { errorHandler } from "./middleware/error-handler";
 import { UserController } from "./controllers/user-controller";
 import { AuthController } from "./controllers/auth-controller";
 import { HonoEnv } from "./types";
@@ -69,11 +70,8 @@ export class App {
       return c.json({ success: false, error: "Route not found" }, 404);
     });
 
-    // Error handler
-    this.app.onError((err, c) => {
-      console.error("Unhandled error:", err);
-      return c.json({ success: false, error: "Internal server error" }, 500);
-    });
+    // Centralized error handler
+    this.app.onError(errorHandler);
   }
 
   getApp(): Hono<HonoEnv> {
