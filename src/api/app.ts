@@ -5,6 +5,7 @@ import { AppContext } from "../config";
 import { createContextMiddleware } from "./middleware/context-middleware";
 import { authMiddleware } from "./middleware/auth-middleware";
 import { UserController } from "./controllers/user-controller";
+import { AuthController } from "./controllers/auth-controller";
 import { HonoEnv } from "./types";
 
 // Register event handlers
@@ -39,7 +40,7 @@ export class App {
       cors({
         origin: "*",
         allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allowHeaders: ["Content-Type", "Authorization"],
+        allowHeaders: ["Content-Type", "Authorization", "X-API-Key"],
       })
     );
 
@@ -57,6 +58,9 @@ export class App {
     });
 
     // API routes
+    const authController = new AuthController();
+    this.app.route("/api/auth", authController.getRouter());
+
     const userController = new UserController();
     this.app.route("/api/users", userController.getRouter());
 

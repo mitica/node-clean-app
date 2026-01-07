@@ -3,24 +3,30 @@ import { User } from "../../domain/entity";
 import { BaseUseCase } from "../../domain/usecase";
 import { AppContext } from "../../config";
 import { InvalidInputError, RequiredJSONSchema } from "../../domain/base";
+import { generateTokenPair, TokenPair } from "../../infra/services/jwt";
 
 export type UserLoginInput = {
   email: string;
   password: string;
 };
 
+export type UserLoginOutput = {
+  user: User;
+  tokens: TokenPair;
+};
+
 /**
- * Login a user.
+ * Login a user and return JWT tokens.
  */
 export class UserLoginUseCase extends BaseUseCase<
   UserLoginInput,
-  User,
+  UserLoginOutput,
   AppContext
 > {
   protected async innerExecute(
     input: Readonly<UserLoginInput>,
     ctx: AppContext
-  ) {
+  ): Promise<UserLoginOutput> {
     const email = input.email.toLowerCase().trim();
     const user = await ctx.repo.user.getByEmail(email);
 
@@ -28,13 +34,26 @@ export class UserLoginUseCase extends BaseUseCase<
       throw new InvalidInputError(`Invalid email or password`);
     }
 
-    return ctx.repo.user.update(
+    // Update last login timestamp
+    const updatedUser = await ctx.repo.user.update(
       {
         id: user.id,
         lastLoginAt: new Date().toISOString()
       },
       { ctx }
     );
+
+    // Generate JWT tokens
+    const tokens = generateTokenPair(
+      updatedUser.id,
+      updatedUser.email,
+      updatedUser.role
+    );
+
+    return {
+      user: updatedUser,
+      tokens,
+    };
   }
 
   static override jsonSchema: RequiredJSONSchema = {

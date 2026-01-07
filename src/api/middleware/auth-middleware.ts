@@ -2,10 +2,15 @@ import { config } from "../../config";
 import { Context, Next, MiddlewareHandler } from "hono";
 import { HonoEnv } from "../types";
 import { UserRole } from "../../domain/entity";
+import { verifyAccessToken } from "../../infra/services/jwt";
 
 /**
- * Authentication middleware that validates API keys and enriches the request context.
+ * Authentication middleware that validates JWT tokens and enriches the request context.
  * This middleware should run after contextMiddleware.
+ *
+ * Supports two authentication methods:
+ * 1. JWT Bearer token (primary): Authorization: Bearer <jwt_access_token>
+ * 2. API Key (for service-to-service): X-API-Key: <api_key>
  */
 export const authMiddleware: MiddlewareHandler<HonoEnv> = async (
   c: Context<HonoEnv>,
@@ -17,20 +22,62 @@ export const authMiddleware: MiddlewareHandler<HonoEnv> = async (
     return;
   }
 
-  if (!config.apiKey && config.nodeEnv === "development") {
-    console.warn("API_KEY is not set in development mode");
-    // In development without API key, mark as authenticated but continue
+  // Skip auth for public auth endpoints
+  if (c.req.path === "/api/auth/login" || c.req.path === "/api/auth/refresh") {
+    await next();
+    return;
+  }
+
+  // Check for API Key authentication first (service-to-service)
+  const apiKey = c.req.header("X-API-Key");
+  if (apiKey) {
+    return handleApiKeyAuth(c, next, apiKey);
+  }
+
+  // Check for JWT Bearer token authentication
+  const authHeader = c.req.header("Authorization");
+  if (authHeader) {
+    return handleJwtAuth(c, next, authHeader);
+  }
+
+  // Development mode without any auth header
+  if (config.nodeEnv === "development") {
+    console.warn("No authentication provided in development mode");
     const currentCtx = c.get("requestContext");
     if (currentCtx) {
-      c.set("requestContext", currentCtx.with({ isAuthenticated: true }));
+      c.set("requestContext", currentCtx.with({ isAuthenticated: false }));
     }
     await next();
     return;
   }
 
-  // Check if API key is configured
+  return c.json(
+    {
+      success: false,
+      error: "Authorization header is required",
+    },
+    401
+  );
+};
+
+/**
+ * Handle API Key authentication (for service-to-service communication).
+ */
+async function handleApiKeyAuth(
+  c: Context<HonoEnv>,
+  next: Next,
+  apiKey: string
+): Promise<Response | void> {
   if (!config.apiKey) {
-    console.error("API_KEY environment variable is not configured");
+    if (config.nodeEnv === "development") {
+      console.warn("API_KEY is not configured in development mode");
+      const currentCtx = c.get("requestContext");
+      if (currentCtx) {
+        c.set("requestContext", currentCtx.with({ isAuthenticated: true }));
+      }
+      await next();
+      return;
+    }
     return c.json(
       {
         success: false,
@@ -40,20 +87,38 @@ export const authMiddleware: MiddlewareHandler<HonoEnv> = async (
     );
   }
 
-  // Get Authorization header
-  const authHeader = c.req.header("Authorization");
-
-  if (!authHeader) {
+  if (apiKey !== config.apiKey) {
     return c.json(
       {
         success: false,
-        error: "Authorization header is required",
+        error: "Invalid API key",
       },
       401
     );
   }
 
-  // Check for Bearer token format
+  // API Key is valid - mark as authenticated (admin-level access)
+  const currentCtx = c.get("requestContext");
+  c.set(
+    "requestContext",
+    currentCtx.with({
+      isAuthenticated: true,
+      isAdmin: true,
+    })
+  );
+
+  await next();
+}
+
+/**
+ * Handle JWT Bearer token authentication.
+ */
+async function handleJwtAuth(
+  c: Context<HonoEnv>,
+  next: Next,
+  authHeader: string
+): Promise<Response | void> {
+  // Validate Bearer token format
   const tokenMatch = authHeader.match(/^Bearer\s+(.+)$/);
   if (!tokenMatch) {
     return c.json(
@@ -66,45 +131,60 @@ export const authMiddleware: MiddlewareHandler<HonoEnv> = async (
   }
 
   const token = tokenMatch[1];
+  const result = verifyAccessToken(token);
 
-  // Validate token against configured API key
-  if (token !== config.apiKey) {
+  if (!result.valid) {
+    const statusCode = result.error === "expired" ? 401 : 401;
     return c.json(
       {
         success: false,
-        error: "Invalid API key",
+        error: result.message,
+        code: result.error === "expired" ? "TOKEN_EXPIRED" : "INVALID_TOKEN",
       },
-      401
+      statusCode
     );
   }
 
-  // Token is valid - enrich context with authentication info
+  // Token is valid - load user and enrich context
   const currentCtx = c.get("requestContext");
-  // Try to load current user if X-User-ID header is provided
-  // This allows API key auth with user context (e.g., admin acting as user)
-  const userIdHeader = c.req.header("X-User-ID");
-  let enrichedCtx = currentCtx.with({ isAuthenticated: true });
+  const userId =
+    typeof result.payload.sub === "string"
+      ? parseInt(result.payload.sub, 10)
+      : result.payload.sub;
 
-  if (userIdHeader) {
-    const userId = parseInt(userIdHeader, 10);
-    if (!isNaN(userId)) {
-      try {
-        const user = await currentCtx.repo.user.findById(userId);
-        if (user) {
-          enrichedCtx = enrichedCtx.with({
-            userId: user.id,
-            currentUser: user,
-            isAdmin: user.role === UserRole.ADMIN,
-          });
-        }
-      } catch (error) {
-        console.warn(`Failed to load user ${userId}:`, error);
-      }
+  try {
+    const user = await currentCtx.repo.user.findById(userId);
+
+    if (!user) {
+      return c.json(
+        {
+          success: false,
+          error: "User not found",
+          code: "USER_NOT_FOUND",
+        },
+        401
+      );
     }
+
+    c.set(
+      "requestContext",
+      currentCtx.with({
+        isAuthenticated: true,
+        userId: user.id,
+        currentUser: user,
+        isAdmin: user.role === UserRole.ADMIN,
+      })
+    );
+
+    await next();
+  } catch (error) {
+    console.error("Failed to load user from token:", error);
+    return c.json(
+      {
+        success: false,
+        error: "Failed to authenticate user",
+      },
+      500
+    );
   }
-
-  c.set("requestContext", enrichedCtx);
-
-  // Proceed to next middleware/handler
-  await next();
-};
+}

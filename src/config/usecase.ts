@@ -1,4 +1,4 @@
-import { UserLoginUseCase } from "../app/user/user-login-usecase";
+import { RefreshTokenUseCase, UserLoginUseCase } from "../app/user";
 import {
   EnqueueTaskUseCase,
   CancelTaskUseCase,
@@ -7,6 +7,7 @@ import {
 
 export interface UseCaseContainer {
   login: UserLoginUseCase;
+  refreshToken: RefreshTokenUseCase;
   enqueueTask: EnqueueTaskUseCase;
   cancelTask: CancelTaskUseCase;
   retryTask: RetryTaskUseCase;
@@ -15,6 +16,7 @@ export interface UseCaseContainer {
 export const createUseCaseContainer = (): UseCaseContainer => {
   return {
     login: new UserLoginUseCase(),
+    refreshToken: new RefreshTokenUseCase(),
     enqueueTask: new EnqueueTaskUseCase(),
     cancelTask: new CancelTaskUseCase(),
     retryTask: new RetryTaskUseCase(),

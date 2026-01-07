@@ -5,6 +5,13 @@ export const config = {
   nodeEnv: process.env["NODE_ENV"] || "development",
   apiKey: process.env["API_KEY"] || "",
   youtubeApiKey: process.env["YOUTUBE_API_KEY"] || "",
+  jwt: {
+    secret: process.env["JWT_SECRET"] || "",
+    accessTokenExpiresIn: process.env["JWT_ACCESS_TOKEN_EXPIRES_IN"] || "15m",
+    refreshTokenExpiresIn: process.env["JWT_REFRESH_TOKEN_EXPIRES_IN"] || "7d",
+    issuer: process.env["JWT_ISSUER"] || "node-clean-app",
+    audience: process.env["JWT_AUDIENCE"] || "node-clean-app-client",
+  },
   database: {
     connection: process.env["DB_CONNECTION"] || "",
   },
@@ -25,4 +32,8 @@ export const config = {
 
 if (config.nodeEnv !== "development" && !config.apiKey) {
   throw new Error("API_KEY is required in non-development environments");
+}
+
+if (config.nodeEnv !== "development" && !config.jwt.secret) {
+  throw new Error("JWT_SECRET is required in non-development environments");
 }
