@@ -1,31 +1,20 @@
+import { IDomainEventBus } from "../base/event-bus";
+import {
+  DomainEventName,
+  DomainEventPayload,
+} from "../base/domain-event";
 import {
   BaseEntity,
   DomainContext,
   EntityData,
   EntityId,
-  TypedEventEmitter,
   Validator,
   EntityUpdateData,
   EntityCreateData,
   EntityConstructor,
   NotFoundError,
-  omitFieldsByValue
+  omitFieldsByValue,
 } from "../base";
-
-export interface RepositoryEvents<
-  TData extends EntityData,
-  TEntity extends BaseEntity<TData> = BaseEntity<TData>,
-  TUpdate extends EntityUpdateData<TData> = EntityUpdateData<TData>
-> {
-  entityCreated: { entity: TEntity; opt?: RepositoryMethodOptions };
-  entityUpdated: {
-    entity: TEntity;
-    data: TUpdate;
-    opt?: RepositoryMethodOptions;
-  };
-  entityDeleted: { entity: TEntity; opt?: RepositoryMethodOptions };
-  preEntityDelete: EntityId;
-}
 
 export interface RepositoryMethodOptions {
   trx?: unknown;
@@ -38,13 +27,8 @@ export interface Repository<
   TEntity extends BaseEntity<TData> = BaseEntity<TData>,
   TCreate extends EntityCreateData<EntityData> = EntityCreateData<TData>,
   TUpdate extends EntityUpdateData<TData> = EntityUpdateData<TData>,
-  TEvents extends RepositoryEvents<TData, TEntity> = RepositoryEvents<
-    TData,
-    TEntity,
-    TUpdate
-  >,
   TMOptions extends RepositoryMethodOptions = RepositoryMethodOptions
-> extends TypedEventEmitter<TEvents> {
+> {
   /**
    * Delete an entity by id.
    * @param id Entity id to be deleted
@@ -143,35 +127,39 @@ export interface RepositoryOptions<TCreate, TUpdate> {
 
 /**
  * Base Repository class. All repository should extend this one.
+ * 
+ * Subclasses must:
+ * 1. Define event names via `getEventPrefix()` (e.g., "user" → "user:created")
+ * 2. Register events in DomainEventRegistry via declaration merging
+ * 3. Pass the event bus singleton to the constructor
  */
 export abstract class BaseRepository<
-    TData extends EntityData,
-    TEntity extends BaseEntity<TData> = BaseEntity<TData>,
-    TCreate extends EntityCreateData<EntityData> = EntityCreateData<TData>,
-    TUpdate extends EntityUpdateData<TData> = EntityUpdateData<TData>,
-    Events extends RepositoryEvents<TData, TEntity> = RepositoryEvents<
-      TData,
-      TEntity,
-      TUpdate
-    >,
-    TMOptions extends RepositoryMethodOptions = RepositoryMethodOptions,
-    TOptions extends RepositoryOptions<TCreate, TUpdate> = RepositoryOptions<
-      TCreate,
-      TUpdate
-    >
+  TData extends EntityData,
+  TEntity extends BaseEntity<TData> = BaseEntity<TData>,
+  TCreate extends EntityCreateData<EntityData> = EntityCreateData<TData>,
+  TUpdate extends EntityUpdateData<TData> = EntityUpdateData<TData>,
+  TMOptions extends RepositoryMethodOptions = RepositoryMethodOptions,
+  TOptions extends RepositoryOptions<TCreate, TUpdate> = RepositoryOptions<
+    TCreate,
+    TUpdate
   >
-  extends TypedEventEmitter<Events>
-  implements Repository<TData, TEntity, TCreate, TUpdate, Events>
+> implements Repository<TData, TEntity, TCreate, TUpdate>
 {
   protected readonly options: Readonly<TOptions>;
 
   public constructor(
     protected entityBuilder: EntityConstructor<TData, TEntity>,
+    protected eventBus: IDomainEventBus,
     options: TOptions
   ) {
-    super();
     this.options = { ...options };
   }
+
+  /**
+   * Override to provide entity name prefix for events.
+   * E.g., "user" will emit "user:created", "user:updated", etc.
+   */
+  protected abstract getEventPrefix(): string;
 
   abstract existsById(id: EntityId, opt?: TMOptions): Promise<boolean>;
 
@@ -199,7 +187,7 @@ export abstract class BaseRepository<
   async checkById(id: EntityId, opt?: TMOptions): Promise<TEntity> {
     const entity = await this.findById(id, {
       ...opt,
-      cache: false
+      cache: false,
     } as TMOptions);
     if (!entity)
       throw new NotFoundError(`${this.getEntityName()} ${id} not found!`);
@@ -338,33 +326,38 @@ export abstract class BaseRepository<
   public abstract getAllIds(opt?: TMOptions): Promise<EntityId[]>;
 
   /**
-   * Fire entityCreated event.
-   * @param entity Created entity
+   * Fire entity created event.
+   * Event name: `${prefix}:created`
    */
   protected async onCreated(entity: TEntity, opt: TMOptions) {
-    return this.emit("entityCreated", { entity, opt });
+    const eventName = `${this.getEventPrefix()}:created` as DomainEventName;
+    return this.eventBus.emit(eventName, { entity, opt } as unknown as DomainEventPayload<typeof eventName>);
   }
 
   /**
-   * Fire entityDeleted event.
-   * @param entity Deleted entity
+   * Fire entity deleted event.
+   * Event name: `${prefix}:deleted`
    */
   protected async onDeleted(entity: TEntity, opt: TMOptions) {
-    return this.emit("entityDeleted", { entity, opt });
+    const eventName = `${this.getEventPrefix()}:deleted` as DomainEventName;
+    return this.eventBus.emit(eventName, { entity, opt } as unknown as DomainEventPayload<typeof eventName>);
   }
 
   /**
-   * Fire entityUpdated event.
-   * @param entity Updated entity
+   * Fire entity updated event.
+   * Event name: `${prefix}:updated`
    */
   protected async onUpdated(entity: TEntity, data: TUpdate, opt: TMOptions) {
-    return this.emit("entityUpdated", { entity, data, opt });
+    const eventName = `${this.getEventPrefix()}:updated` as DomainEventName;
+    return this.eventBus.emit(eventName, { entity, data, opt } as unknown as DomainEventPayload<typeof eventName>);
   }
 
   /**
-   * Fire preEntityDelete event.
+   * Fire pre-delete event.
+   * Event name: `${prefix}:preDelete`
    */
   protected async onPreDelete(id: EntityId) {
-    return this.emit("preEntityDelete", id);
+    const eventName = `${this.getEventPrefix()}:preDelete` as DomainEventName;
+    return this.eventBus.emit(eventName, id as unknown as DomainEventPayload<typeof eventName>);
   }
 }
