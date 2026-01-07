@@ -2,6 +2,8 @@
 
 A base Node.js/TypeScript Clean Architecture application template.
 
+See [CHANGELOG.md](CHANGELOG.md) for version history and recent changes.
+
 ## Overview
 
 This project provides a scalable, maintainable starting point for Node.js backend applications, following Clean Architecture principles. It separates concerns into distinct layers (domain, application, infrastructure, presentation) and includes Docker support, PostgreSQL integration, and modern tooling.
@@ -150,6 +152,77 @@ See `package.json` for all available scripts, including:
 - Create new use cases in `src/application/`
 - Add controllers and routes in `src/presentation/controllers/`
 - Configure middleware in `src/presentation/middleware/`
+
+## Domain Event Bus
+
+The application includes a **type-safe singleton event bus** for domain events, using TypeScript's declaration merging pattern.
+
+### Architecture
+
+| File | Purpose |
+|------|---------|
+| `src/domain/base/domain-event.ts` | Defines `DomainEventRegistry` interface + helper types |
+| `src/domain/base/event-bus.ts` | `IDomainEventBus` interface + `DomainEventBus` class |
+| `src/config/event-bus.ts` | Singleton instance |
+| `src/domain/entity/*.events.ts` | Entity events via declaration merging |
+
+### Registering Events for a New Entity
+
+1. **Create `{entity}.events.ts`** in `src/domain/entity/`:
+
+```typescript
+import { EntityCreatedEvent, EntityDeletedEvent, EntityUpdatedEvent } from "../base/domain-event";
+import { Order, OrderUpdateData } from "./order";
+import { EntityId } from "../base/types";
+
+declare module "../base/domain-event" {
+  interface DomainEventRegistry {
+    "order:created": EntityCreatedEvent<Order>;
+    "order:updated": EntityUpdatedEvent<Order, OrderUpdateData>;
+    "order:deleted": EntityDeletedEvent<Order>;
+    "order:preDelete": EntityId;
+  }
+}
+```
+
+2. **Export from `src/domain/entity/index.ts`**:
+
+```typescript
+export * from "./order.events";
+```
+
+3. **Implement `getEventPrefix()` in repository**:
+
+```typescript
+export class OrderDbRepository extends DbRepository<...> {
+  protected override getEventPrefix(): string {
+    return "order";
+  }
+}
+```
+
+### Subscribing to Events
+
+```typescript
+import { eventBus } from "../config";
+import "../domain/entity/user.events"; // Ensure declaration merging is applied
+
+// Full type safety - payload is typed as EntityCreatedEvent<User>
+eventBus.on("user:created", (event) => {
+  console.log(event.payload.entity.email); // ✅ Typed!
+});
+
+// TypeScript error: "invalid:event" not in registry
+eventBus.on("invalid:event", () => {}); // ❌ Compile error!
+```
+
+### Key Benefits
+
+- **Strong types**: Event names and payloads are checked at compile time
+- **Singleton**: One subscription point for the entire app
+- **Clean Architecture**: Domain defines types, Config provides instance
+- **Extensible**: Each entity registers its own events via declaration merging
+- **Testable**: `resetEventBus()` for test isolation
 
 ## License
 

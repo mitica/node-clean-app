@@ -1,20 +1,21 @@
-import { NotFoundError, ValidationError } from "../../domain/base/errors";
-import { JsonValidator } from "../../domain/base/validator";
-import { EntityId } from "../../domain/base/types";
 import {
   BaseRepository,
-  RepositoryEvents,
   RepositoryMethodOptions,
-  RepositoryOptions
+  RepositoryOptions,
 } from "../../domain/repository";
 import {
+  EntityId,
   BaseEntity,
   EntityConstructor,
   EntityCreateData,
   EntityData,
-  EntityUpdateData
+  EntityUpdateData,
+  JsonValidator,
+  NotFoundError,
+  ValidationError,
 } from "../../domain/base";
 import { dbInstance } from "../database/db";
+import { eventBus } from "../../config";
 
 export interface DbRepositoryOptions<
   TData extends EntityData,
@@ -30,10 +31,6 @@ export abstract class DbRepository<
   TEntity extends BaseEntity<TData> = BaseEntity<TData>,
   TCreate extends EntityCreateData<EntityData> = EntityCreateData<TData>,
   TUpdate extends EntityUpdateData<TData> = EntityUpdateData<TData>,
-  Events extends RepositoryEvents<TData, TEntity> = RepositoryEvents<
-    TData,
-    TEntity
-  >,
   TMOptions extends RepositoryMethodOptions = RepositoryMethodOptions,
   TOptions extends DbRepositoryOptions<
     TData,
@@ -45,7 +42,6 @@ export abstract class DbRepository<
   TEntity,
   TCreate,
   TUpdate,
-  Events,
   TMOptions,
   TOptions
 > {
@@ -56,18 +52,23 @@ export abstract class DbRepository<
     entityBuilder: EntityConstructor<TData, TEntity>,
     options?: DbRepositoryOptions<TData, TCreate, TUpdate>
   ) {
-    super(entityBuilder, {
+    super(entityBuilder, eventBus, {
       createValidator: new JsonValidator(entityBuilder.jsonSchema),
       updateValidator: new JsonValidator({
         ...entityBuilder.jsonSchema,
-        required: ["id"]
+        required: ["id"],
       }),
       isLangTable: options?.isLangTable,
-      tableName: options?.tableName
+      tableName: options?.tableName,
     } as never);
 
     this.tableName = options?.tableName || entityBuilder.tableName();
     // this.isLangTable = options?.isLangTable ?? false;
+  }
+
+  protected override getEventPrefix(): string {
+    // if table name is plural, convert to singular
+    return this.tableName.replace(/_/g, "-").replace(/s$/, "");
   }
 
   protected override getTableName() {

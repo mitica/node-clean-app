@@ -1,4 +1,9 @@
-import { User, UserCreateData, UserData, UserUpdateData } from "../../domain/entity";
+import {
+  User,
+  UserCreateData,
+  UserData,
+  UserUpdateData,
+} from "../../domain/entity";
 import { DbRepository } from "./db-repository";
 import { UserRepository } from "../../domain/repository/user-repository";
 
@@ -8,7 +13,7 @@ export class UserDbRepository
 {
   constructor() {
     super(User, {
-      tableName: "users"
+      tableName: "users",
     });
   }
 
