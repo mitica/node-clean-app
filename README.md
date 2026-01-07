@@ -2,6 +2,8 @@
 
 A base Node.js/TypeScript Clean Architecture application template.
 
+See [CHANGELOG.md](CHANGELOG.md) for version history and recent changes.
+
 ## Overview
 
 This project provides a scalable, maintainable starting point for Node.js backend applications, following Clean Architecture principles. It separates concerns into distinct layers (domain, application, infrastructure, presentation) and includes Docker support, PostgreSQL integration, and modern tooling.
