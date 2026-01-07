@@ -5,6 +5,9 @@ import { AppContext } from "../config";
 import { authMiddleware } from "./middleware/auth-middleware";
 import { UserController } from "./controllers/user-controller";
 
+// Register event handlers
+import "../application/listeners";
+
 export class App {
   private app: Hono;
   private context: AppContext;
