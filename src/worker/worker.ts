@@ -5,18 +5,9 @@ import {
   WorkerConfig,
   WorkerStats,
 } from "../domain/worker";
-import {
-  WorkerTask,
-  WorkerTaskCreateData,
-  WorkerTaskPriority,
-  WorkerTaskStatus,
-} from "../domain/entity/worker-task";
-import {
-  WorkerTaskRepository,
-  RepositoryWriteOptions,
-} from "../domain/repository";
-import { AppContext, eventBus } from "../config";
-import { config } from "../config";
+import { WorkerTask, WorkerTaskStatus } from "../domain/entity/worker-task";
+import { WorkerTaskRepository } from "../domain/repository";
+import { AppContext, eventBus, config } from "../config";
 
 // Import worker task events for type safety
 import "../domain/entity/worker-task.events";
@@ -415,41 +406,4 @@ export class Worker implements IWorker {
       console.error(`[Worker] Error resetting stale tasks:`, error);
     }
   }
-}
-
-/**
- * Create a new worker task
- */
-export type CreateTaskOptions = Partial<
-  Omit<WorkerTaskCreateData, "type" | "payload">
-> &
-  Pick<WorkerTaskCreateData, "type" | "payload">;
-
-/**
- * Result of creating a worker task
- */
-export interface CreateTaskResult {
-  task: WorkerTask;
-  /** True if a new task was created, false if existing was returned */
-  created: boolean;
-}
-
-/**
- * Helper to create a worker task through the repository with idempotency support
- */
-export async function createWorkerTask(
-  ctx: AppContext,
-  options: CreateTaskOptions,
-  opt: RepositoryWriteOptions
-): Promise<CreateTaskResult> {
-  return ctx.repo.workerTask.createIdempotent(
-    {
-      status: WorkerTaskStatus.PENDING,
-      priority: WorkerTaskPriority.NORMAL,
-      attempts: 0,
-      maxAttempts: 3,
-      ...options,
-    },
-    opt
-  );
 }
