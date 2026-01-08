@@ -15,11 +15,15 @@ export interface AcquireTaskOptions extends RepositoryReadOptions {
   lockDuration?: number;
   /** Task types to acquire (empty = all types) */
   taskTypes?: string[];
+  /** Task types to exclude from acquisition */
+  omitTaskTypes?: string[];
 }
 
 export interface FindPendingInput {
   /** Task types to filter (empty = all types) */
   taskTypes?: string[];
+  /** Task types to exclude */
+  omitTaskTypes?: string[];
   /** Maximum number of tasks to return (default: 100) */
   limit?: number;
 }

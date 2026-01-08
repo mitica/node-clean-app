@@ -1,7 +1,7 @@
 {
   "name": "node-clean-app",
   "version": "0.2.0",
-  "description": "Base Nodejs/TypeScript Clean Arhitecture application",
+  "description": "Base Nodejs/TypeScript Clean Arhitecture BE/API application",
   "scripts": {
     "up": "docker-compose up",
     "down": "docker-compose down",

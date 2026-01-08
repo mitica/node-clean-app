@@ -58,6 +58,8 @@ export interface WorkerConfig {
   lockDuration: number;
   /** Task types this worker should process (empty = all) */
   taskTypes: string[];
+  /** Task types this worker should NOT process */
+  omitTaskTypes: string[];
   /** Interval to reset stale tasks (ms) */
   staleTaskCheckInterval: number;
 }

@@ -40,7 +40,7 @@ export class WorkerTaskDbRepository
   async acquireNextTask(
     options: AcquireTaskOptions
   ): Promise<WorkerTask | null> {
-    const { workerId, lockDuration = 5 * 60 * 1000, taskTypes } = options;
+    const { workerId, lockDuration = 5 * 60 * 1000, taskTypes, omitTaskTypes } = options;
     const now = new Date();
     const lockedUntil = new Date(now.getTime() + lockDuration);
 
@@ -58,6 +58,10 @@ export class WorkerTaskDbRepository
 
     if (taskTypes && taskTypes.length > 0) {
       query.whereIn("type", taskTypes);
+    }
+
+    if (omitTaskTypes && omitTaskTypes.length > 0) {
+      query.whereNotIn("type", omitTaskTypes);
     }
 
     const result = await this.knex.transaction(async (trx) => {
@@ -88,7 +92,7 @@ export class WorkerTaskDbRepository
     input?: FindPendingInput,
     opt?: RepositoryReadOptions
   ): Promise<WorkerTask[]> {
-    const { taskTypes, limit = 100 } = input || {};
+    const { taskTypes, omitTaskTypes, limit = 100 } = input || {};
     const now = new Date();
     const query = this.query(opt)
       .where("status", WorkerTaskStatus.PENDING)
@@ -101,6 +105,10 @@ export class WorkerTaskDbRepository
 
     if (taskTypes && taskTypes.length > 0) {
       query.whereIn("type", taskTypes);
+    }
+
+    if (omitTaskTypes && omitTaskTypes.length > 0) {
+      query.whereNotIn("type", omitTaskTypes);
     }
 
     const items = await query;

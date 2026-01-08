@@ -7,6 +7,7 @@ import {
 } from "../domain/worker";
 import {
   WorkerTask,
+  WorkerTaskCreateData,
   WorkerTaskPriority,
   WorkerTaskStatus,
 } from "../domain/entity/worker-task";
@@ -19,7 +20,6 @@ import { config } from "../config";
 
 // Import worker task events for type safety
 import "../domain/entity/worker-task.events";
-import { EntityId } from "../domain";
 
 /**
  * Default worker configuration
@@ -31,6 +31,7 @@ export const defaultWorkerConfig: WorkerConfig = {
   taskTimeout: config.jobs.timeout,
   lockDuration: 5 * 60 * 1000, // 5 minutes
   taskTypes: [],
+  omitTaskTypes: [],
   staleTaskCheckInterval: 60 * 1000, // 1 minute
 };
 
@@ -107,6 +108,11 @@ export class Worker implements IWorker {
         this.config.taskTypes.length ? this.config.taskTypes.join(", ") : "all"
       }`
     );
+    if (this.config.omitTaskTypes.length) {
+      console.log(
+        `[Worker] Omit task types: ${this.config.omitTaskTypes.join(", ")}`
+      );
+    }
 
     this.running = true;
     this.shuttingDown = false;
@@ -221,6 +227,9 @@ export class Worker implements IWorker {
           lockDuration: this.config.lockDuration,
           taskTypes: this.config.taskTypes.length
             ? this.config.taskTypes
+            : undefined,
+          omitTaskTypes: this.config.omitTaskTypes.length
+            ? this.config.omitTaskTypes
             : undefined,
         });
 
@@ -411,19 +420,10 @@ export class Worker implements IWorker {
 /**
  * Create a new worker task
  */
-export interface CreateTaskOptions {
-  type: string;
-  payload: Record<string, unknown>;
-  priority?: WorkerTaskPriority | number;
-  maxAttempts?: number;
-  scheduledAt?: Date;
-  createdByUserId?: EntityId;
-  /**
-   * Optional idempotency key to prevent duplicate tasks.
-   * If provided and an active task with this key exists, returns existing task.
-   */
-  idempotencyKey?: string;
-}
+export type CreateTaskOptions = Partial<
+  Omit<WorkerTaskCreateData, "type" | "payload">
+> &
+  Pick<WorkerTaskCreateData, "type" | "payload">;
 
 /**
  * Result of creating a worker task
@@ -444,15 +444,11 @@ export async function createWorkerTask(
 ): Promise<CreateTaskResult> {
   return ctx.repo.workerTask.createIdempotent(
     {
-      type: options.type,
-      payload: options.payload,
       status: WorkerTaskStatus.PENDING,
-      priority: options.priority ?? WorkerTaskPriority.NORMAL,
+      priority: WorkerTaskPriority.NORMAL,
       attempts: 0,
-      maxAttempts: options.maxAttempts ?? 3,
-      idempotencyKey: options.idempotencyKey,
-      createdByUserId: options.createdByUserId,
-      scheduledAt: options.scheduledAt?.toISOString(),
+      maxAttempts: 3,
+      ...options,
     },
     opt
   );

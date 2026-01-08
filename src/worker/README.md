@@ -8,6 +8,7 @@ The worker system provides a robust, type-safe way to execute background tasks w
 
 - **Persistent task queue**: Tasks are stored in PostgreSQL for durability
 - **Concurrent processing**: Configurable concurrency for parallel task execution
+- **Multiple worker instances**: Run specialized workers for different task types
 - **Automatic retries**: Failed tasks can be retried with configurable attempts
 - **Priority queuing**: Higher priority tasks are processed first
 - **Scheduled tasks**: Tasks can be scheduled for future execution
@@ -21,13 +22,12 @@ The worker system provides a robust, type-safe way to execute background tasks w
 src/worker/
 ├── run.ts              # Worker entry point (standalone runner)
 ├── worker.ts           # Worker implementation
+├── worker-app.ts       # WorkerApp with multi-worker support
 ├── index.ts            # Public exports
 ├── handlers/           # Task handlers
 │   ├── index.ts
 │   └── examples.ts     # Example task handlers
-└── listeners/          # Event listeners
-    ├── index.ts
-    └── worker-task.ts  # Task event handlers
+└── README.md           # This file
 
 src/domain/
 ├── entity/
@@ -42,8 +42,7 @@ src/domain/
 src/app/worker/         # Use cases
 ├── enqueue-task-usecase.ts
 ├── cancel-task-usecase.ts
-├── retry-task-usecase.ts
-└── get-task-stats-usecase.ts
+└── retry-task-usecase.ts
 
 src/infra/repository/
 └── db-worker-task-repository.ts # PostgreSQL implementation
@@ -60,6 +59,68 @@ yarn worker:dev
 # Production (compiled)
 yarn build
 yarn worker
+```
+
+### Configuring Multiple Workers
+
+The `WorkerApp` supports running multiple worker instances with different configurations. This is useful when you need different concurrency levels or dedicated workers for specific task types.
+
+```typescript
+import { AppContext } from "./config";
+import { WorkerApp } from "./worker";
+
+const ctx = new AppContext();
+
+// Default: single worker processing all task types
+const app = new WorkerApp(ctx);
+
+// Or configure multiple specialized workers
+const app = new WorkerApp(ctx, {
+  workers: [
+    // Billing worker: low concurrency for payment-sensitive tasks
+    {
+      name: "billing",
+      taskTypes: ["billing:process", "billing:refund"],
+      concurrency: 2
+    },
+    // General worker: handles all other task types
+    {
+      name: "general",
+      taskTypes: [], // empty = all types
+      concurrency: 10
+    }
+  ]
+});
+
+await app.start();
+
+// Access specific workers
+const billingWorker = app.getWorker("billing");
+const allWorkers = app.getWorkers();
+```
+
+#### WorkerInstanceConfig Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `name` | string | required | Unique name for the worker instance |
+| `taskTypes` | string[] | `[]` | Task types to process (empty = all) |
+| `omitTaskTypes` | string[] | `[]` | Task types to exclude from processing |
+| `concurrency` | number | `JOB_CONCURRENCY` | Concurrent tasks limit |
+| `taskTimeout` | number | `JOB_TIMEOUT` | Task timeout in ms |
+| `handlerTypes` | string[] | undefined | Specific handlers to register |
+
+**Note:** When using `omitTaskTypes`, you can have a "general" worker that processes everything except specific task types that are handled by specialized workers:
+
+```typescript
+const app = new WorkerApp(ctx, {
+  workers: [
+    // Billing worker: only processes billing tasks with low concurrency
+    { name: "billing", taskTypes: ["billing:process", "billing:refund"], concurrency: 2 },
+    // General worker: processes everything EXCEPT billing tasks
+    { name: "general", omitTaskTypes: ["billing:process", "billing:refund"], concurrency: 10 }
+  ]
+});
 ```
 
 ### Creating Tasks
@@ -129,13 +190,16 @@ export const myTaskHandler: TaskHandlerRegistration = {
 };
 ```
 
-Register it in `src/worker/run.ts`:
+Register it in `src/worker/worker-app.ts`:
 
 ```typescript
 import { myTaskHandler } from "./handlers/my-handler";
 
-// In WorkerApp.registerHandlers():
-this.worker.registerHandler(myTaskHandler);
+// In WorkerApp.collectHandlers():
+private collectHandlers(): void {
+  this.allHandlers.push(...exampleHandlers);
+  this.allHandlers.push(myTaskHandler);
+}
 ```
 
 ### Scheduling Tasks
@@ -199,7 +263,8 @@ Environment variables:
 Worker config options:
 
 ```typescript
-const worker = new Worker(taskRepository, {
+// Single worker (low-level)
+const worker = new Worker(ctx, {
   workerId: "my-worker-1",
   concurrency: 10,
   pollInterval: 1000,
@@ -207,6 +272,14 @@ const worker = new Worker(taskRepository, {
   lockDuration: 300000,
   taskTypes: ["email:*", "report:*"], // Filter by type
   staleTaskCheckInterval: 60000
+});
+
+// Multiple workers via WorkerApp (recommended)
+const app = new WorkerApp(ctx, {
+  workers: [
+    { name: "billing", taskTypes: ["billing:process"], concurrency: 2 },
+    { name: "general", taskTypes: [] }
+  ]
 });
 ```
 
