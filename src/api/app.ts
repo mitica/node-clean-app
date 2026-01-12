@@ -5,6 +5,7 @@ import { AppContext } from "../config";
 import { createContextMiddleware } from "./middleware/context-middleware";
 import { authMiddleware } from "./middleware/auth-middleware";
 import { errorHandler } from "./middleware/error-handler";
+import { telemetryMiddleware } from "./middleware/telemetry-middleware";
 import { UserController } from "./controllers/user-controller";
 import { AuthController } from "./controllers/auth-controller";
 import { HonoEnv } from "./types";
@@ -35,6 +36,11 @@ export class App {
   }
 
   private setupMiddleware(): void {
+    // OpenTelemetry tracing middleware (must be first for accurate timing)
+    this.app.use("*", telemetryMiddleware({
+      ignoreRoutes: ["/health", "/metrics"],
+    }));
+
     this.app.use("*", logger());
     this.app.use(
       "*",

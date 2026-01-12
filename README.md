@@ -15,6 +15,7 @@ This project provides a scalable, maintainable starting point for Node.js backen
 - **Dockerized**: Ready-to-use Docker and Docker Compose setup for local development and deployment.
 - **PostgreSQL**: Integrated database with migration and seed scripts.
 - **Redis**: Optional caching layer via Redis.
+- **OpenTelemetry**: Distributed tracing for API and Worker processes with Jaeger integration.
 - **Knex.js**: SQL query builder and migration tool.
 - **Hono**: Lightweight web framework for HTTP APIs.
 - **Nodemon**: Hot-reloading for development.
@@ -223,6 +224,57 @@ eventBus.on("invalid:event", () => {}); // ❌ Compile error!
 - **Clean Architecture**: Domain defines types, Config provides instance
 - **Extensible**: Each entity registers its own events via declaration merging
 - **Testable**: `resetEventBus()` for test isolation
+
+## OpenTelemetry (Distributed Tracing)
+
+The application includes built-in **OpenTelemetry** support for distributed tracing across API and Worker processes.
+
+### Features
+
+- **Auto-instrumentation**: HTTP, PostgreSQL, Redis automatically traced
+- **Manual instrumentation**: Custom spans via `withSpan()` utility
+- **Distributed tracing**: Trace context propagates from API to Worker tasks
+- **Jaeger integration**: Pre-configured in Docker Compose
+
+### Quick Start
+
+```bash
+# Start all services with Jaeger
+yarn up
+
+# View traces at http://localhost:16686
+```
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `OTEL_ENABLED` | Enable/disable telemetry | `true` |
+| `OTEL_SERVICE_NAME` | Base service name | `node-clean-app` |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | OTLP collector endpoint | - |
+| `OTEL_TRACES_SAMPLER_ARG` | Sample rate (0.0 - 1.0) | `1.0` (dev), `0.1` (prod) |
+
+### Usage
+
+```typescript
+import { withSpan, SpanAttributes } from "./config/telemetry";
+
+// Create custom spans
+const result = await withSpan("processOrder", async (span) => {
+  span.setAttribute(SpanAttributes.ENTITY_ID, orderId);
+  return await processOrder(orderId);
+});
+
+// Worker tasks with trace context
+import { injectTaskTraceContext } from "./worker/telemetry";
+
+await createWorkerTask(ctx, {
+  type: "email:send",
+  payload: injectTaskTraceContext({ to: "user@example.com" })
+});
+```
+
+See [src/config/telemetry/README.md](src/config/telemetry/README.md) for detailed documentation.
 
 ## License
 

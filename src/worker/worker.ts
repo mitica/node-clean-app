@@ -8,6 +8,8 @@ import {
 import { WorkerTask, WorkerTaskStatus } from "../domain/entity/worker-task";
 import { WorkerTaskRepository } from "../domain/repository";
 import { AppContext, eventBus, config } from "../config";
+import { createWorkerSpan, traceWorkerPoll } from "./telemetry";
+import { SpanStatusCode } from "@opentelemetry/api";
 
 // Import worker task events for type safety
 import "../domain/entity/worker-task.events";
@@ -91,6 +93,8 @@ export class Worker implements IWorker {
       return;
     }
 
+    const span = createWorkerSpan(this.config.workerId, "start");
+
     console.log(`[Worker] Starting worker ${this.config.workerId}`);
     console.log(`[Worker] Concurrency: ${this.config.concurrency}`);
     console.log(`[Worker] Poll interval: ${this.config.pollInterval}ms`);
@@ -125,6 +129,8 @@ export class Worker implements IWorker {
     await this.poll();
 
     console.log(`[Worker] Worker ${this.config.workerId} started`);
+    span.setStatus({ code: SpanStatusCode.OK });
+    span.end();
   }
 
   /**
@@ -134,6 +140,8 @@ export class Worker implements IWorker {
     if (!this.running) {
       return;
     }
+
+    const span = createWorkerSpan(this.config.workerId, "stop");
 
     console.log(`[Worker] Stopping worker ${this.config.workerId}...`);
     this.shuttingDown = true;
@@ -162,6 +170,8 @@ export class Worker implements IWorker {
     }
 
     console.log(`[Worker] Worker ${this.config.workerId} stopped`);
+    span.setStatus({ code: SpanStatusCode.OK });
+    span.end();
   }
 
   /**
@@ -208,33 +218,35 @@ export class Worker implements IWorker {
       return;
     }
 
-    // Acquire tasks up to available capacity
-    for (let i = 0; i < availableSlots; i++) {
-      if (this.shuttingDown) break;
+    await traceWorkerPoll(this.config.workerId, async () => {
+      // Acquire tasks up to available capacity
+      for (let i = 0; i < availableSlots; i++) {
+        if (this.shuttingDown) break;
 
-      try {
-        const task = await this.taskRepo.acquireNextTask({
-          workerId: this.config.workerId,
-          lockDuration: this.config.lockDuration,
-          taskTypes: this.config.taskTypes.length
-            ? this.config.taskTypes
-            : undefined,
-          omitTaskTypes: this.config.omitTaskTypes.length
-            ? this.config.omitTaskTypes
-            : undefined,
-        });
+        try {
+          const task = await this.taskRepo.acquireNextTask({
+            workerId: this.config.workerId,
+            lockDuration: this.config.lockDuration,
+            taskTypes: this.config.taskTypes.length
+              ? this.config.taskTypes
+              : undefined,
+            omitTaskTypes: this.config.omitTaskTypes.length
+              ? this.config.omitTaskTypes
+              : undefined,
+          });
 
-        if (task) {
-          this.processTask(task);
-        } else {
-          // No more tasks available
+          if (task) {
+            this.processTask(task);
+          } else {
+            // No more tasks available
+            break;
+          }
+        } catch (error) {
+          console.error(`[Worker] Error acquiring task:`, error);
           break;
         }
-      } catch (error) {
-        console.error(`[Worker] Error acquiring task:`, error);
-        break;
       }
-    }
+    });
   }
 
   /**
@@ -397,13 +409,22 @@ export class Worker implements IWorker {
    * Reset stale tasks that have expired locks
    */
   private async resetStaleTasks(): Promise<void> {
+    const span = createWorkerSpan(this.config.workerId, "stale-check");
     try {
       const count = await this.taskRepo.resetStaleTasks();
       if (count > 0) {
         console.log(`[Worker] Reset ${count} stale tasks`);
+        span.setAttribute("worker.stale_tasks_reset", count);
       }
+      span.setStatus({ code: SpanStatusCode.OK });
     } catch (error) {
       console.error(`[Worker] Error resetting stale tasks:`, error);
+      span.setStatus({ 
+        code: SpanStatusCode.ERROR, 
+        message: error instanceof Error ? error.message : String(error) 
+      });
+    } finally {
+      span.end();
     }
   }
 }
