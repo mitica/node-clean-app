@@ -1,8 +1,3 @@
-// IMPORTANT: Initialize telemetry BEFORE any other imports
-// OpenTelemetry hooks into Node.js modules at require/import time
-import { initTelemetry, shutdownTelemetry } from "../config/telemetry";
-initTelemetry("worker");
-
 import { config } from "../config";
 import { AppContext } from "../config/app-context";
 import { WorkerApp } from "./worker-app";
@@ -36,7 +31,6 @@ async function main(): Promise<void> {
     console.log("\n🛑 Received SIGINT, shutting down...");
     await app.stop();
     await ctx.close();
-    await shutdownTelemetry();
     process.exit(0);
   });
 
@@ -44,7 +38,6 @@ async function main(): Promise<void> {
     console.log("\n🛑 Received SIGTERM, shutting down...");
     await app.stop();
     await ctx.close();
-    await shutdownTelemetry();
     process.exit(0);
   });
 

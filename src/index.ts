@@ -1,8 +1,3 @@
-// IMPORTANT: Initialize telemetry BEFORE any other imports
-// OpenTelemetry hooks into Node.js modules at require/import time
-import { initTelemetry, shutdownTelemetry } from './config/telemetry';
-initTelemetry('api');
-
 import { serve } from '@hono/node-server';
 import { App } from './api/app';
 import { config } from './config';
@@ -43,14 +38,12 @@ async function startServer(): Promise<void> {
     process.on('SIGINT', async () => {
       console.log('\n🛑 Shutting down server...');
       await app.close();
-      await shutdownTelemetry();
       process.exit(0);
     });
 
     process.on('SIGTERM', async () => {
       console.log('\n🛑 Shutting down server...');
       await app.close();
-      await shutdownTelemetry();
       process.exit(0);
     });
 

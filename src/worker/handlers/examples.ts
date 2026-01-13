@@ -1,20 +1,4 @@
-import { TaskHandlerRegistration, TaskHandlerResult } from "../../domain/worker";
-import { traceTaskHandler } from "../telemetry";
-import type { WorkerTask } from "../../domain/entity/worker-task";
-
-/**
- * Helper to create traced task handlers
- */
-function createTracedHandler(
-  registration: Omit<TaskHandlerRegistration, "handler"> & {
-    handler: (context: { task: WorkerTask; isShuttingDown: () => boolean }) => Promise<TaskHandlerResult>;
-  }
-): TaskHandlerRegistration {
-  return {
-    ...registration,
-    handler: traceTaskHandler(registration.handler),
-  };
-}
+import { TaskHandlerRegistration } from "../../domain/worker";
 
 /**
  * Example email task handler
@@ -32,7 +16,7 @@ function createTracedHandler(
  * });
  * ```
  */
-export const emailSendHandler: TaskHandlerRegistration = createTracedHandler({
+export const emailSendHandler: TaskHandlerRegistration = {
   type: "email:send",
   timeout: 30000, // 30 seconds
   maxAttempts: 3,
@@ -71,12 +55,12 @@ export const emailSendHandler: TaskHandlerRegistration = createTracedHandler({
       }
     };
   }
-});
+};
 
 /**
  * Example report generation handler
  */
-export const reportGenerateHandler: TaskHandlerRegistration = createTracedHandler({
+export const reportGenerateHandler: TaskHandlerRegistration = {
   type: "report:generate",
   timeout: 300000, // 5 minutes
   maxAttempts: 2,
@@ -111,12 +95,12 @@ export const reportGenerateHandler: TaskHandlerRegistration = createTracedHandle
       }
     };
   }
-});
+};
 
 /**
  * Example data sync handler
  */
-export const dataSyncHandler: TaskHandlerRegistration = createTracedHandler({
+export const dataSyncHandler: TaskHandlerRegistration = {
   type: "data:sync",
   timeout: 60000, // 1 minute
   maxAttempts: 5,
@@ -143,7 +127,7 @@ export const dataSyncHandler: TaskHandlerRegistration = createTracedHandler({
       }
     };
   }
-});
+};
 
 /**
  * All example handlers

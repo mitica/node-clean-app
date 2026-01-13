@@ -5,27 +5,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.3.0] - 2026-01-12
-
-### Added
-
-- **OpenTelemetry Integration**: Distributed tracing for API and Worker processes
-  - Auto-instrumentation for HTTP, PostgreSQL, Redis
-  - Hono middleware for HTTP request tracing
-  - Worker task instrumentation with trace context propagation
-  - Jaeger integration in Docker Compose
-  - Configurable via environment variables (`OTEL_ENABLED`, `OTEL_EXPORTER_OTLP_ENDPOINT`, etc.)
-- Telemetry configuration module (`src/config/telemetry/`)
-- Telemetry utilities: `withSpan`, `SpanAttributes`, `isTelemetryEnabled`
-- Worker service added to Docker Compose
-- Comprehensive telemetry documentation ([src/config/telemetry/README.md](src/config/telemetry/README.md))
-
-### Changed
-
-- Entry points (`index.ts`, `worker/run.ts`) now initialize telemetry before other imports
-- Graceful shutdown includes telemetry flush
-- Task handlers wrapped with `traceTaskHandler` for automatic tracing
-
 ## [0.2.0] - 2026-01-07
 
 ### Added
@@ -84,7 +63,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Future improvements and features will be documented here
 
-[0.3.0]: https://github.com/mitica/node-clean-app/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/mitica/node-clean-app/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/mitica/node-clean-app/releases/tag/v0.1.0
-[Unreleased]: https://github.com/mitica/node-clean-app/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/mitica/node-clean-app/compare/v0.2.0...HEAD

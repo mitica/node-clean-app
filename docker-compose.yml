@@ -7,18 +7,12 @@ services:
     links:
       - db
       - redis
-      - jaeger
     ports:
       - ${WEB_PORT:-42407}:42407 # Application port
       - ${WEB_DEBUG_PORT:-9222}:9222 # Debugging port
     environment:
       REDISCLOUD_URL: redis://api_cache
       DATABASE_URL: postgres://api@db:5432/api
-      DB_CONNECTION: postgres://api@db:5432/api
-      # OpenTelemetry configuration
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
-      OTEL_TRACES_SAMPLER_ARG: "1.0"
-      OTEL_SERVICE_NAME: node-clean-app
     volumes:
       - .:/usr/src/app  # Mount the project directory
       - /usr/src/app/node_modules  # Mount node_modules inside container
@@ -26,33 +20,6 @@ services:
     depends_on:
       - db
       - redis
-      - jaeger
-
-  worker:
-    container_name: api_worker
-    build: .
-    env_file:
-      - .env
-    links:
-      - db
-      - redis
-      - jaeger
-    environment:
-      REDISCLOUD_URL: redis://api_cache
-      DATABASE_URL: postgres://api@db:5432/api
-      DB_CONNECTION: postgres://api@db:5432/api
-      # OpenTelemetry configuration
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
-      OTEL_TRACES_SAMPLER_ARG: "1.0"
-      OTEL_SERVICE_NAME: node-clean-app
-    volumes:
-      - .:/usr/src/app
-      - /usr/src/app/node_modules
-    command: yarn worker:dev
-    depends_on:
-      - db
-      - redis
-      - jaeger
 
   db:
     build:
@@ -80,16 +47,6 @@ services:
       - ${API_REDIS_PORT:-6379}:6379
     volumes:
       - redis-data:/data
-
-  # OpenTelemetry: Jaeger for distributed tracing
-  jaeger:
-    image: jaegertracing/all-in-one:latest
-    container_name: api_jaeger
-    ports:
-      - "16686:16686"  # Jaeger UI
-      - "4318:4318"    # OTLP HTTP receiver
-    environment:
-      - COLLECTOR_OTLP_ENABLED=true
 
 volumes:
   postgres-storage:
