@@ -8,7 +8,7 @@ export interface RepoContainer {
   workerTask: WorkerTaskRepository;
 }
 
-export const createRepoContainer = (): RepoContainer => {
+const createRepoContainer = (): RepoContainer => {
   return {
     user: new UserDbRepository(),
     workerTask: new WorkerTaskDbRepository()

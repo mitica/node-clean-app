@@ -1,6 +1,7 @@
 import { EntityId } from "./types";
 import { BaseEntity, EntityData, EntityUpdateData } from "./entity";
 import { RepositoryWriteOptions } from "../repository";
+import { DomainContext } from "../context";
 
 /**
  * Global Domain Event Registry - extend via declaration merging.
@@ -19,6 +20,13 @@ import { RepositoryWriteOptions } from "../repository";
  */
 export interface DomainEventRegistry {
   // Extended via declaration merging in entity files
+  "usecase:executed": {
+    name: string;
+    input: unknown;
+    output: unknown;
+    ctx: DomainContext;
+  };
+  "usecase:executing": { name: string; input: unknown; ctx: DomainContext };
 }
 
 /** Event name must be registered in DomainEventRegistry */
