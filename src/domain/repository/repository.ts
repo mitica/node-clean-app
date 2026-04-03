@@ -14,21 +14,25 @@ import {
 } from "../base";
 import { DomainContext } from "../context";
 
-export interface RepositoryReadOptions {
+export interface RepositoryReadOptions<
+  TCtx extends DomainContext = DomainContext,
+> {
   trx?: unknown;
   cache?: boolean;
-  ctx?: DomainContext;
+  ctx?: TCtx;
 }
 
-export interface RepositoryWriteOptions extends RepositoryReadOptions {
-  ctx: DomainContext;
+export interface RepositoryWriteOptions<
+  TCtx extends DomainContext = DomainContext,
+> extends RepositoryReadOptions<TCtx> {
+  ctx: TCtx;
 }
 
 export interface Repository<
   TData extends EntityData = EntityData,
   TEntity extends BaseEntity<TData> = BaseEntity<TData>,
   TCreate extends EntityCreateData<EntityData> = EntityCreateData<TData>,
-  TUpdate extends EntityUpdateData<TData> = EntityUpdateData<TData>
+  TUpdate extends EntityUpdateData<TData> = EntityUpdateData<TData>,
 > {
   /**
    * Delete an entity by id.
@@ -151,9 +155,8 @@ export abstract class BaseRepository<
   TOptions extends RepositoryOptions<TCreate, TUpdate> = RepositoryOptions<
     TCreate,
     TUpdate
-  >
-> implements Repository<TData, TEntity, TCreate, TUpdate>
-{
+  >,
+> implements Repository<TData, TEntity, TCreate, TUpdate> {
   protected readonly options: Readonly<TOptions>;
 
   public constructor(

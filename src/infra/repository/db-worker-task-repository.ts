@@ -3,10 +3,10 @@ import {
   WorkerTaskCreateData,
   WorkerTaskData,
   WorkerTaskStatus,
-  WorkerTaskUpdateData
+  WorkerTaskUpdateData,
 } from "../../domain/entity/worker-task";
 import {
-  AcquireTaskOptions,
+  AcquireTaskParams,
   WorkerTaskRepository,
   WorkerTaskStats,
   RepositoryReadOptions,
@@ -18,7 +18,7 @@ import {
   ReleaseLockInput,
   CountByStatusInput,
   CleanupOldTasksInput,
-  FindByIdempotencyKeyInput
+  FindByIdempotencyKeyInput,
 } from "../../domain/repository";
 import { DbRepository } from "./db-repository";
 
@@ -33,22 +33,32 @@ export class WorkerTaskDbRepository
 {
   constructor() {
     super(WorkerTask, {
-      tableName: "worker_tasks"
+      tableName: "worker_tasks",
     });
   }
 
   async acquireNextTask(
-    options: AcquireTaskOptions
+    params: AcquireTaskParams,
+    opt?: RepositoryReadOptions
   ): Promise<WorkerTask | null> {
-    const { workerId, lockDuration = 5 * 60 * 1000, taskTypes, omitTaskTypes } = options;
+    const {
+      workerId,
+      lockDuration = 5 * 60 * 1000,
+      taskTypes,
+      omitTaskTypes,
+    } = params;
     const now = new Date();
     const lockedUntil = new Date(now.getTime() + lockDuration);
 
     // Use a raw query with FOR UPDATE SKIP LOCKED to safely acquire a task
-    const query = this.query(options)
+    const query = this.query(opt)
       .where("status", WorkerTaskStatus.PENDING)
       .where(function () {
-        this.whereNull("scheduledAt").orWhere("scheduledAt", "<=", now.toISOString());
+        this.whereNull("scheduledAt").orWhere(
+          "scheduledAt",
+          "<=",
+          now.toISOString()
+        );
       })
       .orderBy("priority", "desc")
       .orderBy("createdAt", "asc")
@@ -78,7 +88,7 @@ export class WorkerTaskDbRepository
           lockedBy: workerId,
           lockedUntil: lockedUntil.toISOString(),
           attempts: this.knex.raw("attempts + 1"),
-          updatedAt: now.toISOString()
+          updatedAt: now.toISOString(),
         })
         .returning("*");
 
@@ -97,7 +107,11 @@ export class WorkerTaskDbRepository
     const query = this.query(opt)
       .where("status", WorkerTaskStatus.PENDING)
       .where(function () {
-        this.whereNull("scheduledAt").orWhere("scheduledAt", "<=", now.toISOString());
+        this.whereNull("scheduledAt").orWhere(
+          "scheduledAt",
+          "<=",
+          now.toISOString()
+        );
       })
       .orderBy("priority", "desc")
       .orderBy("createdAt", "asc")
@@ -148,7 +162,7 @@ export class WorkerTaskDbRepository
         lockedUntil: null,
         errorMessage: null,
         errorStack: null,
-        updatedAt: now
+        updatedAt: now,
       })
       .returning("*");
 
@@ -186,7 +200,7 @@ export class WorkerTaskDbRepository
         errorStack: error.stack,
         lockedBy: null,
         lockedUntil: null,
-        updatedAt: now
+        updatedAt: now,
       })
       .returning("*");
 
@@ -206,7 +220,7 @@ export class WorkerTaskDbRepository
         lockedBy: null,
         lockedUntil: null,
         startedAt: null,
-        updatedAt: now
+        updatedAt: now,
       })
       .returning("*");
 
@@ -227,7 +241,7 @@ export class WorkerTaskDbRepository
         lockedBy: null,
         lockedUntil: null,
         startedAt: null,
-        updatedAt: now.toISOString()
+        updatedAt: now.toISOString(),
       });
 
     return result;
@@ -258,7 +272,7 @@ export class WorkerTaskDbRepository
       completed: 0,
       failed: 0,
       cancelled: 0,
-      total: 0
+      total: 0,
     };
 
     for (const row of result) {
@@ -327,13 +341,16 @@ export class WorkerTaskDbRepository
     }
 
     // Check for existing task with same key
-    const existing = await this.findByIdempotencyKey({ key: data.idempotencyKey }, opt);
+    const existing = await this.findByIdempotencyKey(
+      { key: data.idempotencyKey },
+      opt
+    );
 
     if (existing) {
       // Return existing task if it's still active (PENDING/RUNNING)
       const isActive = [
         WorkerTaskStatus.PENDING,
-        WorkerTaskStatus.RUNNING
+        WorkerTaskStatus.RUNNING,
       ].includes(existing.status);
 
       if (isActive) {

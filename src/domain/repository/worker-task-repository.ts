@@ -3,12 +3,16 @@ import {
   WorkerTaskCreateData,
   WorkerTaskData,
   WorkerTaskStatus,
-  WorkerTaskUpdateData
+  WorkerTaskUpdateData,
 } from "../entity/worker-task";
-import { Repository, RepositoryReadOptions, RepositoryWriteOptions } from "./repository";
+import {
+  Repository,
+  RepositoryReadOptions,
+  RepositoryWriteOptions,
+} from "./repository";
 import { EntityId } from "../base";
 
-export interface AcquireTaskOptions extends RepositoryReadOptions {
+export interface AcquireTaskParams {
   /** Worker ID to lock the task */
   workerId: string;
   /** Lock duration in milliseconds (default: 5 minutes) */
@@ -62,18 +66,20 @@ export interface FindByIdempotencyKeyInput {
   key: string;
 }
 
-export interface WorkerTaskRepository
-  extends Repository<
-    WorkerTaskData,
-    WorkerTask,
-    WorkerTaskCreateData,
-    WorkerTaskUpdateData
-  > {
+export interface WorkerTaskRepository extends Repository<
+  WorkerTaskData,
+  WorkerTask,
+  WorkerTaskCreateData,
+  WorkerTaskUpdateData
+> {
   /**
    * Acquire the next pending task and lock it for processing.
    * Returns null if no task is available.
    */
-  acquireNextTask(options: AcquireTaskOptions): Promise<WorkerTask | null>;
+  acquireNextTask(
+    params: AcquireTaskParams,
+    opt?: RepositoryReadOptions
+  ): Promise<WorkerTask | null>;
 
   /**
    * Find all pending tasks, optionally filtered by type.
@@ -112,7 +118,10 @@ export interface WorkerTaskRepository
   /**
    * Release lock on a task (used for graceful shutdown).
    */
-  releaseLock(input: ReleaseLockInput, opt: RepositoryWriteOptions): Promise<WorkerTask>;
+  releaseLock(
+    input: ReleaseLockInput,
+    opt: RepositoryWriteOptions
+  ): Promise<WorkerTask>;
 
   /**
    * Reset stale tasks to pending status.
