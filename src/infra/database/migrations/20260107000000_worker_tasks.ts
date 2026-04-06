@@ -14,48 +14,48 @@ export async function up(knex: Knex): Promise<void> {
     
     // Retry handling
     table.integer("attempts").notNullable().defaultTo(0);
-    table.integer("maxAttempts").notNullable().defaultTo(3);
+    table.integer("max_attempts").notNullable().defaultTo(3);
     
     // Idempotency key for deduplication
-    table.string("idempotencyKey", 50).nullable();
+    table.string("idempotency_key", 50).nullable();
     
     // User who created the task
-    table.integer("createdByUserId").nullable().index();
+    table.integer("created_by_user_id").nullable().index();
     
     // Scheduling
-    table.timestamp("scheduledAt", { useTz: true }).nullable().index();
+    table.timestamp("scheduled_at", { useTz: true }).nullable().index();
     
     // Execution timestamps
-    table.timestamp("startedAt", { useTz: true }).nullable();
-    table.timestamp("finishedAt", { useTz: true }).nullable();
+    table.timestamp("started_at", { useTz: true }).nullable();
+    table.timestamp("finished_at", { useTz: true }).nullable();
     
     // Error tracking
-    table.text("errorMessage").nullable();
-    table.text("errorStack").nullable();
+    table.text("error_message").nullable();
+    table.text("error_stack").nullable();
     
     // Result storage
     table.jsonb("result").nullable();
     
     // Lock management for concurrent workers
-    table.string("lockedBy", 255).nullable().index();
-    table.timestamp("lockedUntil", { useTz: true }).nullable().index();
+    table.string("locked_by", 255).nullable().index();
+    table.timestamp("locked_until", { useTz: true }).nullable().index();
     
     // Standard timestamps
-    table.timestamp("createdAt", { useTz: true }).notNullable().defaultTo(knex.fn.now());
-    table.timestamp("updatedAt", { useTz: true }).notNullable().defaultTo(knex.fn.now());
+    table.timestamp("created_at", { useTz: true }).notNullable().defaultTo(knex.fn.now());
+    table.timestamp("updated_at", { useTz: true }).notNullable().defaultTo(knex.fn.now());
     
     // Composite indexes for common queries
-    table.index(["status", "priority", "scheduledAt"], "idx_worker_tasks_pending");
-    table.index(["status", "lockedUntil"], "idx_worker_tasks_stale");
-    table.index(["status", "finishedAt"], "idx_worker_tasks_cleanup");
+    table.index(["status", "priority", "scheduled_at"], "idx_worker_tasks_pending");
+    table.index(["status", "locked_until"], "idx_worker_tasks_stale");
+    table.index(["status", "finished_at"], "idx_worker_tasks_cleanup");
   });
 
   // Partial unique index for idempotency key (PostgreSQL specific)
   // Ensures uniqueness only for active tasks (PENDING/RUNNING)
   await knex.raw(`
     CREATE UNIQUE INDEX idx_worker_tasks_idempotency_active 
-    ON worker_tasks ("idempotencyKey") 
-    WHERE "idempotencyKey" IS NOT NULL 
+    ON worker_tasks ("idempotency_key") 
+    WHERE "idempotency_key" IS NOT NULL 
     AND status IN ('PENDING', 'RUNNING')
   `);
 }

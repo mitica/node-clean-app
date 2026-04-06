@@ -4,7 +4,6 @@ import {
   CancelTaskUseCase,
   RetryTaskUseCase,
 } from "../app/worker";
-import { eventBus } from "./event-bus";
 
 export interface UseCaseContainer {
   login: UserLoginUseCase;
@@ -16,11 +15,11 @@ export interface UseCaseContainer {
 
 const createUseCaseContainer = (): UseCaseContainer => {
   return {
-    login: new UserLoginUseCase(eventBus),
-    refreshToken: new RefreshTokenUseCase(eventBus),
-    enqueueTask: new EnqueueTaskUseCase(eventBus),
-    cancelTask: new CancelTaskUseCase(eventBus),
-    retryTask: new RetryTaskUseCase(eventBus),
+    login: new UserLoginUseCase(),
+    refreshToken: new RefreshTokenUseCase(),
+    enqueueTask: new EnqueueTaskUseCase(),
+    cancelTask: new CancelTaskUseCase(),
+    retryTask: new RetryTaskUseCase(),
   };
 };
 

@@ -1,10 +1,10 @@
 import EventEmitter from "emittery";
 
-export interface TypedEventEmitterEvents {
+interface Events {
   [eventName: string]: any;
 }
 
-export class TypedEventEmitter<EventDataMap extends TypedEventEmitterEvents> {
+export class TypedEventEmitter<EventDataMap extends Events> {
   private _emitter: EventEmitter;
 
   constructor() {
@@ -33,7 +33,7 @@ export class TypedEventEmitter<EventDataMap extends TypedEventEmitterEvents> {
     this._emitter.off(eventName, listener);
   }
 
-  async emit<Name extends keyof EventDataMap>(
+  protected async emit<Name extends keyof EventDataMap>(
     eventName: Name,
     eventData: EventDataMap[Name]
   ): Promise<void> {

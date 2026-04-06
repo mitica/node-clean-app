@@ -1,19 +1,21 @@
-import { DomainContext } from "./context";
-import { EntityData } from "./base/entity";
 import {
+  TypedEventEmitter,
+  EntityData,
   JSONSchema,
   RequiredArrayJSONSchema,
   RequiredJSONSchema,
-} from "./base/json-schema";
-import { BaseErrorCode, ForbiddenError } from "./base/errors";
-import { delay } from "./base/utils";
-import { Validator, JsonValidator } from "./base/validator";
-import { IDomainEventBus } from "./base";
+  BaseErrorCode,
+  ForbiddenError,
+  delay,
+  Validator,
+  JsonValidator,
+} from "./base";
+import { DomainContext } from "./context";
 
 export interface UseCaseEvents<
   TInput,
   TOutput,
-  TContext extends DomainContext = DomainContext
+  TContext extends DomainContext = DomainContext,
 > {
   executed: { input: TInput; output: TOutput; ctx: TContext };
   executing: { input: TInput; ctx: TContext };
@@ -22,8 +24,13 @@ export interface UseCaseEvents<
 export interface UseCase<
   TInput,
   TOutput,
-  TContext extends DomainContext = DomainContext
-> {
+  TContext extends DomainContext = DomainContext,
+  TEvents extends UseCaseEvents<TInput, TOutput, TContext> = UseCaseEvents<
+    TInput,
+    TOutput,
+    TContext
+  >,
+> extends TypedEventEmitter<TEvents> {
   execute(input: TInput, ctx: TContext): Promise<TOutput>;
 }
 
@@ -43,16 +50,21 @@ export interface UseCaseOptions<TInput> {
 export abstract class BaseUseCase<
   TInput,
   TOutput,
-  TContext extends DomainContext = DomainContext
-> implements UseCase<TInput, TOutput, TContext>
+  TContext extends DomainContext = DomainContext,
+  TEvents extends UseCaseEvents<TInput, TOutput, TContext> = UseCaseEvents<
+    TInput,
+    TOutput,
+    TContext
+  >,
+>
+  extends TypedEventEmitter<TEvents>
+  implements UseCase<TInput, TOutput, TContext, TEvents>
 {
   protected inputValidators: Validator<TInput>[] = [];
   protected options: UseCaseOptions<TInput> = {};
 
-  public constructor(
-    protected eventBus: IDomainEventBus,
-    options?: UseCaseOptions<TInput>
-  ) {
+  public constructor(options?: UseCaseOptions<TInput>) {
+    super();
     this.options = options || {};
     this.setInputValidator(options?.inputValidator);
   }
@@ -140,17 +152,15 @@ export abstract class BaseUseCase<
    * @param output Created output
    */
   protected async onExecuted(input: TInput, output: TOutput, ctx: TContext) {
-    const name = this.constructor.name;
     // logger.debug(`${this.constructor.name} executed.`);
-    return this.eventBus.emit("usecase:executed", { name, input, output, ctx });
+    return this.emit("executed", { input, output, ctx });
   }
 
   /**
    * Fire executing event.
    */
   protected async onExecuting(input: TInput, ctx: TContext) {
-    const name = this.constructor.name;
-    return this.eventBus.emit("usecase:executing", { name, input, ctx });
+    return this.emit("executing", { input, ctx });
   }
 
   protected async onError(
@@ -159,7 +169,6 @@ export abstract class BaseUseCase<
     retryCount: number,
     error: Error
   ) {
-    // const name = this.constructor.name;
     if (!this.options.retryCount || retryCount >= this.options.retryCount)
       throw error;
 

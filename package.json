@@ -50,6 +50,7 @@
   "homepage": "https://github.com/mitica/node-clean-app#readme",
   "devDependencies": {
     "@types/bcryptjs": "^3.0.0",
+    "@types/camelize": "^1.0.1",
     "@types/json-schema": "^7.0.15",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/ms": "^2.1.0",
@@ -67,6 +68,8 @@
     "ajv": "^8.18.0",
     "ajv-formats": "^3.0.1",
     "bcryptjs": "^3.0.2",
+    "camelize": "^1.0.1",
+    "decamelize": "^6.0.1",
     "dotenv": "^17.2.2",
     "emittery": "^1.2.0",
     "hono": "^4.12.7",

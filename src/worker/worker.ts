@@ -7,10 +7,13 @@ import {
 } from "../domain/worker";
 import { WorkerTask, WorkerTaskStatus } from "../domain/entity/worker-task";
 import { WorkerTaskRepository } from "../domain/repository";
-import { AppContext, eventBus, config } from "../config";
-
-// Import worker task events for type safety
-import "../domain/entity/worker-task.events";
+import { AppContext, config } from "../config";
+import {
+  onWorkerTaskStarted,
+  onWorkerTaskCompleted,
+  onWorkerTaskFailed,
+  onWorkerTaskRetrying,
+} from "../app/hooks/worker-task";
 
 /**
  * Default worker configuration
@@ -260,11 +263,7 @@ export class Worker implements IWorker {
       `[Worker] Processing task ${task.id} (type: ${task.type}, attempt: ${task.attempts})`
     );
 
-    // Emit started event
-    await eventBus.emit("worker-task:started", {
-      task,
-      workerId: this.config.workerId,
-    });
+    await onWorkerTaskStarted({ task, workerId: this.config.workerId });
 
     if (!handler) {
       console.error(
@@ -336,11 +335,7 @@ export class Worker implements IWorker {
         `[Worker] Task ${task.id} completed successfully in ${duration}ms`
       );
 
-      await eventBus.emit("worker-task:completed", {
-        task: completedTask,
-        result,
-        duration,
-      });
+      await onWorkerTaskCompleted({ task: completedTask, result, duration });
     } catch (error) {
       console.error(`[Worker] Error marking task as completed:`, error);
     }
@@ -375,14 +370,10 @@ export class Worker implements IWorker {
         );
       }
 
-      await eventBus.emit("worker-task:failed", {
-        task: failedTask,
-        error,
-        willRetry,
-      });
+      await onWorkerTaskFailed({ task: failedTask, error, willRetry });
 
       if (willRetry) {
-        await eventBus.emit("worker-task:retrying", {
+        await onWorkerTaskRetrying({
           task: failedTask,
           attempt: task.attempts + 1,
           nextAttemptAt: new Date(),

@@ -1,6 +1,6 @@
 import * as R from "ramda";
 import { RequiredJSONSchema } from "./json-schema";
-import { dataIsEqual, omitFieldsByValue, uniq } from "./utils";
+import { dataIsEqual, omitFieldsByValue, toSnakeCase, uniq } from "./utils";
 import { Constructor, EntityId } from "./types";
 
 export type EntityCreateData<T extends EntityData> = Omit<
@@ -11,10 +11,11 @@ export type EntityCreateData<T extends EntityData> = Omit<
 };
 
 export type EntityUpdateData<T extends EntityData> = Partial<{
-  [K in keyof Omit<T, "createdAt">]: T[K] extends string | undefined
+  [K in keyof Omit<T, "createdAt" | "id">]: T[K] extends string | undefined
     ? T[K] | null
     : T[K] | null;
 }> & {
+  id: EntityId;
   updatedAt?: string;
 };
 
@@ -24,8 +25,9 @@ export interface EntityData {
   updatedAt: string;
 }
 
-export interface Entity<TData extends EntityData = EntityData>
-  extends EntityData {
+export interface Entity<
+  TData extends EntityData = EntityData,
+> extends EntityData {
   /**
    * Get entity data.
    */
@@ -56,9 +58,9 @@ export interface Entity<TData extends EntityData = EntityData>
  * Base entity class.
  * All entities should extend BaseEntity.
  */
-export class BaseEntity<TData extends EntityData = EntityData>
-  implements Entity<TData>
-{
+export class BaseEntity<
+  TData extends EntityData = EntityData,
+> implements Entity<TData> {
   protected readonly _data: TData;
 
   public constructor(data: TData) {
@@ -121,11 +123,11 @@ export class BaseEntity<TData extends EntityData = EntityData>
   public static readonly jsonSchema: RequiredJSONSchema = {
     type: "object",
     properties: {
-      id: { type: "string", pattern: "^[a-z0-9]{26}$" },
+      id: { type: "integer", minimum: 1 },
       createdAt: { type: "string", format: "date-time" },
-      updatedAt: { type: "string", format: "date-time" }
+      updatedAt: { type: "string", format: "date-time" },
     },
-    required: ["id"]
+    required: [],
   };
 
   toJson(): Record<keyof TData, unknown> {
@@ -136,7 +138,7 @@ export class BaseEntity<TData extends EntityData = EntityData>
   }
 
   public static tableName() {
-    return this.name;
+    return toSnakeCase(this.name);
   }
 
   fieldsToOmitOnCompare() {
@@ -176,8 +178,10 @@ export class BaseEntity<TData extends EntityData = EntityData>
   }
 }
 
-export interface EntityConstructor<D extends EntityData, E extends Entity<D>>
-  extends Constructor<E, D> {
+export interface EntityConstructor<
+  D extends EntityData,
+  E extends Entity<D>,
+> extends Constructor<E, D> {
   readonly jsonSchema: RequiredJSONSchema;
   tableName(): string;
 }

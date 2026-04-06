@@ -1,14 +1,10 @@
-import {
-  hasValue,
-  InvalidInputError,
-  isNumber,
-  isPositiveNumber
-} from ".";
+import { InvalidInputError } from "./errors";
+import { hasValue, isNumber, isPositiveNumber } from "./utils";
 
 export const emptyCursorPage = <T>(totalCount = 0): CursorPage<T> => ({
   totalCount,
   edges: [],
-  pageInfo: { hasNextPage: false }
+  pageInfo: { hasNextPage: false },
 });
 
 export interface CursorPageParams {
@@ -68,7 +64,7 @@ export async function createCursorPage<T>(
   getItems: (params: CursorPageParams) => Promise<T[]>,
   info?: CursorPageCreateInfo<T>
 ): Promise<CursorPage<T>> {
-  if ((params.first && params.first < 0) || params.first > 50)
+  if ((params.first && params.first < 0) || params.first > 100)
     throw new InvalidInputError(`Invalid 'first' argument: ${params.first}`);
 
   let totalCountNumber = getSyncTotalCount(totalCount, params.after);
@@ -80,7 +76,7 @@ export async function createCursorPage<T>(
     return {
       totalCount: await getTotalCount(totalCountNumber ?? totalCount),
       edges: [],
-      pageInfo: { hasNextPage: false }
+      pageInfo: { hasNextPage: false },
     };
 
   let items: T[] = [];
@@ -89,7 +85,7 @@ export async function createCursorPage<T>(
   else {
     const [count, list] = await Promise.all([
       getTotalCount(totalCount),
-      getItems(params)
+      getItems(params),
     ]);
     totalCountNumber = count;
     items = list;
@@ -116,7 +112,10 @@ export async function createCursorPage<T>(
     return { node, cursor: endCursor };
   });
 
-  const pageInfo = { endCursor, hasNextPage };
+  const pageInfo: CursorPageInfo = {
+    endCursor,
+    hasNextPage,
+  };
 
   return { edges, pageInfo, totalCount: totalCountNumber };
 }

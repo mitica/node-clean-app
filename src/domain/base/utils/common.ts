@@ -94,6 +94,12 @@ export const omitNullFields = <T extends object>(obj: T): T =>
 export const omitUndefinedFields = <T extends object>(obj: T): T =>
   omitFieldsByValue(obj, [undefined]);
 
+export const omitNUFields = <T extends object>(obj: T): T =>
+  omitFieldsByValue(obj, [null, undefined]);
+
+export const omitNUEFields = <T extends object>(obj: T): T =>
+  omitFieldsByValue(obj, [null, undefined, ""]);
+
 export const uniq = <T>(arr: T[]) => [...new Set(arr)];
 
 /**
@@ -135,3 +141,69 @@ export const dataIsEqual = (
   if (obj1 === obj2) return true;
   return objectHashFn(obj1, options) === objectHashFn(obj2, options);
 };
+
+/**
+ * Convert an object with numeric keys (e.g. { "0": {...}, "1": {...} })
+ * into a normal array ([ {...}, {...} ]).
+ *
+ * Keeps the order sorted by numeric key.
+ */
+export function objectToArray<T = any>(obj: Record<string, T> | T[]): T[] {
+  if (Array.isArray(obj)) return obj; // already array
+
+  // If obj is null/undefined or not an object
+  if (obj == null || typeof obj !== "object") return [];
+
+  return Object.keys(obj)
+    .filter((k) => !isNaN(Number(k))) // only numeric keys
+    .sort((a, b) => Number(a) - Number(b)) // ensure correct order
+    .map((k) => obj[k]);
+}
+
+export function isPlainObject(
+  value: unknown
+): value is Record<string, unknown> {
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    Object.prototype.toString.call(value) === "[object Object]"
+  );
+}
+
+/**
+ * Execută tasks din iterator cu un număr maxim de execuții simultane
+ * @param iterator - AsyncGenerator care furnizează items pentru procesare
+ * @param handler - Funcție care procesează fiecare item
+ * @param concurrency - Numărul maxim de execuții simultane (default: 2)
+ */
+export async function runConcurrently<T, R>(
+  iterator: AsyncGenerator<T>,
+  handler: (item: T) => Promise<R>,
+  concurrency: number = 2
+): Promise<R[]> {
+  const runningPromises = new Set<Promise<void>>();
+  const results: R[] = [];
+
+  for await (const item of iterator) {
+    // Așteaptă ca cel puțin o execuție să se termine dacă am ajuns la limita de concurență
+    if (runningPromises.size >= concurrency) {
+      await Promise.race(runningPromises);
+    }
+
+    // Creează task-ul nou
+    const task = handler(item)
+      .then((result) => {
+        results.push(result);
+      })
+      .finally(() => {
+        runningPromises.delete(task);
+      });
+
+    runningPromises.add(task);
+  }
+
+  // Așteaptă ca toate task-urile rămase să se termine
+  await Promise.all(runningPromises);
+
+  return results;
+}

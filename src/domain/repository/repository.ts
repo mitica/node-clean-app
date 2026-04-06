@@ -1,18 +1,98 @@
+import { DomainContext } from "../../domain/context";
 import {
   BaseEntity,
   EntityData,
   EntityId,
+  TypedEventEmitter,
   Validator,
   EntityUpdateData,
   EntityCreateData,
   EntityConstructor,
   NotFoundError,
   omitFieldsByValue,
-  DomainEventName,
-  DomainEventPayload,
-  IDomainEventBus,
+  FilterField,
+  SortBy,
+  PaginationParams,
+  CursorPage,
+  createCursorPage,
+  CursorPageParams,
 } from "../base";
-import { DomainContext } from "../context";
+
+export interface BaseFilterParams<
+  FEType extends string = string,
+  SEType extends string = string,
+> {
+  filter?: FilterField<FEType>[];
+  select?: SEType[];
+  user?: UserFilterParams;
+}
+
+export interface BaseStatsParams<
+  FEType extends string = string,
+  SEType extends string = string,
+> extends BaseFilterParams<FEType> {
+  select: SEType[];
+  group?: number[];
+}
+
+export interface StatsParams<
+  FEType extends string = string,
+  SEType extends string = string,
+> extends BaseStatsParams<FEType, SEType> {
+  first: number;
+  offset?: number;
+  sort?: SortBy<number>[];
+}
+
+export interface CursorStatsParams<
+  FEType extends string = string,
+  SEType extends string = string,
+>
+  extends StatsParams<FEType, SEType>, CursorPageParams {}
+
+export type StatsPropValue = string | number;
+
+export interface StatsData {
+  values: StatsPropValue[];
+}
+
+export interface UserSuggestedParams {
+  userId: string;
+  lang: string;
+  coordinates?: number[];
+}
+
+export interface UserFilterParams {
+  userId?: string;
+  lang: string;
+  coordinates?: number[];
+  visitorId?: string;
+}
+
+export interface FindBaseParams<
+  T extends string = string,
+> extends BaseFilterParams<T> {
+  sort?: SortBy<T | number>[];
+  user?: UserFilterParams;
+}
+
+export type FindParams<T extends FindBaseParams = FindBaseParams> = T &
+  PaginationParams;
+
+export interface RepositoryEvents<
+  TData extends EntityData,
+  TEntity extends BaseEntity<TData> = BaseEntity<TData>,
+  TUpdate extends EntityUpdateData<TData> = EntityUpdateData<TData>,
+> {
+  entityCreated: { entity: TEntity; opt?: RepositoryReadOptions };
+  entityUpdated: {
+    entity: TEntity;
+    data: TUpdate;
+    opt?: RepositoryReadOptions;
+  };
+  entityDeleted: { entity: TEntity; opt?: RepositoryReadOptions };
+  preEntityDelete: EntityId;
+}
 
 export interface RepositoryReadOptions<
   TCtx extends DomainContext = DomainContext,
@@ -33,7 +113,41 @@ export interface Repository<
   TEntity extends BaseEntity<TData> = BaseEntity<TData>,
   TCreate extends EntityCreateData<EntityData> = EntityCreateData<TData>,
   TUpdate extends EntityUpdateData<TData> = EntityUpdateData<TData>,
-> {
+  TFindParams extends FindBaseParams = FindBaseParams,
+  TEvents extends RepositoryEvents<TData, TEntity> = RepositoryEvents<
+    TData,
+    TEntity,
+    TUpdate
+  >,
+> extends TypedEventEmitter<TEvents> {
+  statsList(params: StatsParams): Promise<StatsData[]>;
+  statsCount(params: BaseStatsParams): Promise<number>;
+  statsCursor(params: CursorStatsParams): Promise<CursorPage<StatsData>>;
+  find(
+    params: FindParams<TFindParams>,
+    opt?: RepositoryReadOptions
+  ): Promise<TEntity[]>;
+  first(
+    params: TFindParams,
+    opt?: RepositoryReadOptions
+  ): Promise<TEntity | null>;
+  count(params: TFindParams, opt?: RepositoryReadOptions): Promise<number>;
+  ids(
+    params: FindParams<TFindParams>,
+    opt?: RepositoryReadOptions
+  ): Promise<EntityId[]>;
+  cursor(
+    params: FindParams<TFindParams>,
+    opt?: RepositoryReadOptions
+  ): Promise<CursorPage<TEntity>>;
+  generator(
+    params: FindParams<TFindParams>,
+    opt?: RepositoryReadOptions
+  ): AsyncGenerator<TEntity>;
+  generatorList(
+    params: FindParams<TFindParams>,
+    opt?: RepositoryReadOptions
+  ): AsyncGenerator<TEntity[]>;
   /**
    * Delete an entity by id.
    * @param id Entity id to be deleted
@@ -48,6 +162,18 @@ export interface Repository<
    * @param ids Entities id to be deleted
    */
   deleteByIds(ids: EntityId[], opt: RepositoryWriteOptions): Promise<number>;
+
+  // /**
+  //  * Upsert an entity.
+  //  * @param data Entity data
+  //  */
+  // upsert(data: TCreate, opt: TMOptions): Promise<TEntity>;
+
+  // /**
+  //  * Upsert many entities.
+  //  * @param data Entity data
+  //  */
+  // upsertMany(data: TCreate[], opt: TMOptions): Promise<TEntity[]>;
 
   /**
    * Create a new entity.
@@ -141,37 +267,110 @@ export interface RepositoryOptions<TCreate, TUpdate> {
 
 /**
  * Base Repository class. All repository should extend this one.
- *
- * Subclasses must:
- * 1. Define event names via `getEventPrefix()` (e.g., "user" → "user:created")
- * 2. Register events in DomainEventRegistry via declaration merging
- * 3. Pass the event bus singleton to the constructor
  */
 export abstract class BaseRepository<
   TData extends EntityData,
   TEntity extends BaseEntity<TData> = BaseEntity<TData>,
   TCreate extends EntityCreateData<EntityData> = EntityCreateData<TData>,
   TUpdate extends EntityUpdateData<TData> = EntityUpdateData<TData>,
+  TFindParams extends FindBaseParams = FindBaseParams,
+  Events extends RepositoryEvents<TData, TEntity> = RepositoryEvents<
+    TData,
+    TEntity,
+    TUpdate
+  >,
   TOptions extends RepositoryOptions<TCreate, TUpdate> = RepositoryOptions<
     TCreate,
     TUpdate
   >,
-> implements Repository<TData, TEntity, TCreate, TUpdate> {
+>
+  extends TypedEventEmitter<Events>
+  implements Repository<TData, TEntity, TCreate, TUpdate, TFindParams, Events>
+{
   protected readonly options: Readonly<TOptions>;
 
   public constructor(
     protected entityBuilder: EntityConstructor<TData, TEntity>,
-    protected eventBus: IDomainEventBus,
     options: TOptions
   ) {
+    super();
     this.options = { ...options };
   }
 
-  /**
-   * Override to provide entity name prefix for events.
-   * E.g., "user" will emit "user:created", "user:updated", etc.
-   */
-  protected abstract getEventPrefix(): string;
+  abstract find(
+    params: FindParams<TFindParams>,
+    opt?: RepositoryReadOptions
+  ): Promise<TEntity[]>;
+  abstract count(
+    params: TFindParams,
+    opt?: RepositoryReadOptions
+  ): Promise<number>;
+  abstract ids(
+    params: FindParams<TFindParams>,
+    opt?: RepositoryReadOptions
+  ): Promise<EntityId[]>;
+  abstract statsList(
+    params: StatsParams,
+    opt?: RepositoryReadOptions
+  ): Promise<StatsData[]>;
+  abstract statsCount(
+    params: BaseStatsParams,
+    opt?: RepositoryReadOptions
+  ): Promise<number>;
+
+  statsCursor(
+    params: CursorStatsParams,
+    opt?: RepositoryReadOptions
+  ): Promise<CursorPage<StatsData>> {
+    const { after, first, offset, ...countParams } = params;
+    return createCursorPage<StatsData>(
+      { after, first },
+      () => this.statsCount(countParams, opt),
+      () => this.statsList(params, opt)
+    );
+  }
+
+  async first(params: TFindParams, opt?: RepositoryReadOptions) {
+    const [one] = await this.find({ ...params, first: 1 }, opt);
+    return one || null;
+  }
+
+  async *generator(
+    params: FindParams<TFindParams>,
+    opt?: RepositoryReadOptions
+  ): AsyncGenerator<TEntity> {
+    while (true) {
+      const { edges, pageInfo } = await this.cursor(params, opt);
+      for (const edge of edges) yield edge.node as TEntity;
+
+      if (!pageInfo.hasNextPage || edges.length <= params.first) break;
+    }
+  }
+
+  async *generatorList(
+    params: FindParams<TFindParams>,
+    opt?: RepositoryReadOptions
+  ) {
+    while (true) {
+      const { edges, pageInfo } = await this.cursor(params, opt);
+      yield edges.map((edge) => edge.node as TEntity);
+
+      if (!pageInfo.hasNextPage || edges.length <= params.first) break;
+    }
+  }
+
+  cursor(
+    params: FindParams<TFindParams>,
+    opt?: RepositoryReadOptions
+  ): Promise<CursorPage<TEntity>> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { after, first, offset, ...countParams } = params;
+    return createCursorPage<TEntity>(
+      { after, first },
+      () => this.count(countParams as never, opt),
+      () => this.find(params, opt)
+    );
+  }
 
   abstract existsById(
     id: EntityId,
@@ -183,7 +382,7 @@ export abstract class BaseRepository<
   ): Promise<T>;
   abstract deleteByIds(
     ids: EntityId[],
-    opt: RepositoryWriteOptions
+    opt: RepositoryReadOptions
   ): Promise<number>;
 
   getEntityName(): string {
@@ -203,7 +402,10 @@ export abstract class BaseRepository<
   }
 
   async checkById(id: EntityId, opt?: RepositoryReadOptions): Promise<TEntity> {
-    const entity = await this.findById(id, { ...opt, cache: false });
+    const entity = await this.findById(id, {
+      ...opt,
+      cache: false,
+    });
     if (!entity)
       throw new NotFoundError(`${this.getEntityName()} ${id} not found!`);
     return entity;
@@ -227,7 +429,7 @@ export abstract class BaseRepository<
       return null;
     }
 
-    await this.onPreDelete(id, opt);
+    await this.onPreDelete(id);
 
     const entity = await this.innerDelete(id, opt);
     if (entity) await this.onDeleted(entity, opt);
@@ -319,7 +521,10 @@ export abstract class BaseRepository<
     return data.id ? this.findById(data.id, { ...opt, cache: false }) : null;
   }
 
-  public async findOrCreate(data: TCreate, opt: RepositoryWriteOptions) {
+  public async findOrCreate(
+    data: TCreate,
+    opt: RepositoryWriteOptions
+  ): Promise<TEntity> {
     const existingEntity = await this.findUnique(data, opt);
     return existingEntity ? existingEntity : await this.create(data, opt);
   }
@@ -354,55 +559,37 @@ export abstract class BaseRepository<
   public abstract getAllIds(opt?: RepositoryReadOptions): Promise<EntityId[]>;
 
   /**
-   * Fire entity created event.
-   * Event name: `${prefix}:created`
+   * Fire entityCreated event.
+   * @param entity Created entity
    */
   protected async onCreated(entity: TEntity, opt: RepositoryWriteOptions) {
-    const eventName = `${this.getEventPrefix()}:created` as DomainEventName;
-    return this.eventBus.emit(eventName, {
-      entity,
-      opt,
-    } as unknown as DomainEventPayload<typeof eventName>);
+    return this.emit("entityCreated", { entity, opt });
   }
 
   /**
-   * Fire entity deleted event.
-   * Event name: `${prefix}:deleted`
+   * Fire entityDeleted event.
+   * @param entity Deleted entity
    */
   protected async onDeleted(entity: TEntity, opt: RepositoryWriteOptions) {
-    const eventName = `${this.getEventPrefix()}:deleted` as DomainEventName;
-    return this.eventBus.emit(eventName, {
-      entity,
-      opt,
-    } as unknown as DomainEventPayload<typeof eventName>);
+    return this.emit("entityDeleted", { entity, opt });
   }
 
   /**
-   * Fire entity updated event.
-   * Event name: `${prefix}:updated`
+   * Fire entityUpdated event.
+   * @param entity Updated entity
    */
   protected async onUpdated(
     entity: TEntity,
     data: TUpdate,
     opt: RepositoryWriteOptions
   ) {
-    const eventName = `${this.getEventPrefix()}:updated` as DomainEventName;
-    return this.eventBus.emit(eventName, {
-      entity,
-      data,
-      opt,
-    } as unknown as DomainEventPayload<typeof eventName>);
+    return this.emit("entityUpdated", { entity, data, opt });
   }
 
   /**
-   * Fire pre-delete event.
-   * Event name: `${prefix}:preDelete`
+   * Fire preEntityDelete event.
    */
-  protected async onPreDelete(id: EntityId, opt: RepositoryWriteOptions) {
-    const eventName = `${this.getEventPrefix()}:preDelete` as DomainEventName;
-    return this.eventBus.emit(eventName, {
-      entityId: id,
-      opt,
-    } as unknown as DomainEventPayload<typeof eventName>);
+  protected async onPreDelete(id: EntityId) {
+    return this.emit("preEntityDelete", id);
   }
 }

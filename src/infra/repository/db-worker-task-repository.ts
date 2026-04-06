@@ -1,3 +1,4 @@
+import { type Knex } from "knex";
 import {
   WorkerTask,
   WorkerTaskCreateData,
@@ -21,6 +22,7 @@ import {
   FindByIdempotencyKeyInput,
 } from "../../domain/repository";
 import { DbRepository } from "./db-repository";
+import { IQueryBuilderFactory } from "./query/query-builder-factory";
 
 export class WorkerTaskDbRepository
   extends DbRepository<
@@ -31,9 +33,9 @@ export class WorkerTaskDbRepository
   >
   implements WorkerTaskRepository
 {
-  constructor() {
-    super(WorkerTask, {
-      tableName: "worker_tasks",
+  constructor(knex: Knex, queryBuilderFactory: IQueryBuilderFactory) {
+    super(knex, queryBuilderFactory, WorkerTask, {
+      tableName: WorkerTask.tableName(),
     });
   }
 
@@ -54,14 +56,14 @@ export class WorkerTaskDbRepository
     const query = this.query(opt)
       .where("status", WorkerTaskStatus.PENDING)
       .where(function () {
-        this.whereNull("scheduledAt").orWhere(
-          "scheduledAt",
+        this.whereNull("scheduled_at").orWhere(
+          "scheduled_at",
           "<=",
           now.toISOString()
         );
       })
       .orderBy("priority", "desc")
-      .orderBy("createdAt", "asc")
+      .orderBy("created_at", "asc")
       .limit(1)
       .forUpdate()
       .skipLocked();
@@ -84,11 +86,11 @@ export class WorkerTaskDbRepository
         .where("id", task.id)
         .update({
           status: WorkerTaskStatus.RUNNING,
-          startedAt: now.toISOString(),
-          lockedBy: workerId,
-          lockedUntil: lockedUntil.toISOString(),
+          started_at: now.toISOString(),
+          locked_by: workerId,
+          locked_until: lockedUntil.toISOString(),
           attempts: this.knex.raw("attempts + 1"),
-          updatedAt: now.toISOString(),
+          updated_at: now.toISOString(),
         })
         .returning("*");
 
@@ -107,14 +109,14 @@ export class WorkerTaskDbRepository
     const query = this.query(opt)
       .where("status", WorkerTaskStatus.PENDING)
       .where(function () {
-        this.whereNull("scheduledAt").orWhere(
-          "scheduledAt",
+        this.whereNull("scheduled_at").orWhere(
+          "scheduled_at",
           "<=",
           now.toISOString()
         );
       })
       .orderBy("priority", "desc")
-      .orderBy("createdAt", "asc")
+      .orderBy("created_at", "asc")
       .limit(limit);
 
     if (taskTypes && taskTypes.length > 0) {
@@ -132,7 +134,7 @@ export class WorkerTaskDbRepository
   async findRunning(opt?: RepositoryReadOptions): Promise<WorkerTask[]> {
     const items = await this.query(opt)
       .where("status", WorkerTaskStatus.RUNNING)
-      .orderBy("startedAt", "asc");
+      .orderBy("started_at", "asc");
 
     return items.map((item: WorkerTaskData) => this.toEntity(item));
   }
@@ -141,7 +143,7 @@ export class WorkerTaskDbRepository
     const now = new Date();
     const items = await this.query(opt)
       .where("status", WorkerTaskStatus.RUNNING)
-      .where("lockedUntil", "<", now.toISOString());
+      .where("locked_until", "<", now.toISOString());
 
     return items.map((item: WorkerTaskData) => this.toEntity(item));
   }
@@ -156,13 +158,13 @@ export class WorkerTaskDbRepository
       .where("id", id)
       .update({
         status: WorkerTaskStatus.COMPLETED,
-        finishedAt: now,
+        finished_at: now,
         result: result ? JSON.stringify(result) : null,
-        lockedBy: null,
-        lockedUntil: null,
-        errorMessage: null,
-        errorStack: null,
-        updatedAt: now,
+        locked_by: null,
+        locked_until: null,
+        error_message: null,
+        error_stack: null,
+        updated_at: now,
       })
       .returning("*");
 
@@ -195,12 +197,12 @@ export class WorkerTaskDbRepository
       .where("id", id)
       .update({
         status,
-        finishedAt: canRetry ? null : now,
-        errorMessage: error.message,
-        errorStack: error.stack,
-        lockedBy: null,
-        lockedUntil: null,
-        updatedAt: now,
+        finished_at: canRetry ? null : now,
+        error_message: error.message,
+        error_stack: error.stack,
+        locked_by: null,
+        locked_until: null,
+        updated_at: now,
       })
       .returning("*");
 
@@ -217,10 +219,10 @@ export class WorkerTaskDbRepository
       .where("id", id)
       .update({
         status: WorkerTaskStatus.PENDING,
-        lockedBy: null,
-        lockedUntil: null,
-        startedAt: null,
-        updatedAt: now,
+        locked_by: null,
+        locked_until: null,
+        started_at: null,
+        updated_at: now,
       })
       .returning("*");
 
@@ -235,13 +237,13 @@ export class WorkerTaskDbRepository
     const now = new Date();
     const result = await this.query(opt)
       .where("status", WorkerTaskStatus.RUNNING)
-      .where("lockedUntil", "<", now.toISOString())
+      .where("locked_until", "<", now.toISOString())
       .update({
         status: WorkerTaskStatus.PENDING,
-        lockedBy: null,
-        lockedUntil: null,
-        startedAt: null,
-        updatedAt: now.toISOString(),
+        locked_by: null,
+        locked_until: null,
+        started_at: null,
+        updated_at: now.toISOString(),
       });
 
     return result;
@@ -311,7 +313,7 @@ export class WorkerTaskDbRepository
 
     const result = await this.query(opt)
       .whereIn("status", [WorkerTaskStatus.COMPLETED, WorkerTaskStatus.FAILED])
-      .where("finishedAt", "<", cutoffDate.toISOString())
+      .where("finished_at", "<", cutoffDate.toISOString())
       .delete();
 
     return result;
@@ -323,8 +325,8 @@ export class WorkerTaskDbRepository
   ): Promise<WorkerTask | null> {
     const { key } = input;
     const row = await this.query(opt)
-      .where("idempotencyKey", key)
-      .orderBy("createdAt", "desc")
+      .where("idempotency_key", key)
+      .orderBy("created_at", "desc")
       .first();
 
     return row ? this.toEntity(row) : null;

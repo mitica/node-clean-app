@@ -1,6 +1,6 @@
 # Application Layer
 
-The **application** layer contains the use cases that orchestrate the domain entities to fulfill business requirements.
+The **app** layer contains the use cases that orchestrate the domain entities to fulfill business requirements.
 
 ## Responsibilities
 
@@ -18,4 +18,4 @@ The **application** layer contains the use cases that orchestrate the domain ent
 ## Structure
 
 - `user/` - User-related use cases
-- `listeners/` - Event listeners that react to domain events
+- `hooks/` - Event listeners that react to domain events
