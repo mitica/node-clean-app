@@ -9,9 +9,6 @@ import { UserController } from "./controllers/user-controller";
 import { AuthController } from "./controllers/auth-controller";
 import { HonoEnv } from "./types";
 
-// Register event handlers
-import "../app/listeners";
-
 export class App {
   private app: Hono<HonoEnv>;
   private ctx: AppContext;

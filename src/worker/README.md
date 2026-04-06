@@ -31,8 +31,7 @@ src/worker/
 
 src/domain/
 ├── entity/
-│   ├── worker-task.ts       # WorkerTask entity
-│   └── worker-task.events.ts # Domain events
+│   └── worker-task.ts       # WorkerTask entity
 ├── repository/
 │   └── worker-task-repository.ts # Repository interface
 └── worker/

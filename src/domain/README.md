@@ -6,7 +6,6 @@ The **domain** layer contains the core business rules and entities. This is the 
 
 - Define **entities** (business objects with identity)
 - Define **value objects** (immutable objects without identity)
-- Define **domain events** (significant occurrences in the domain)
 - Define **repository interfaces** (contracts for data access)
 - Contain pure business logic and validation rules
 
@@ -18,6 +17,6 @@ The **domain** layer contains the core business rules and entities. This is the 
 
 ## Structure
 
-- `entity/` - Business entities and their domain events
-- `repository/` - Repository interfaces (contracts)
-- `base/` - Base classes and utilities for domain objects
+- `entity/` - Business entities
+- `repository/` - Repository interfaces (contracts) with built-in event emitting
+- `base/` - Base classes, utilities, and data helpers for domain objects

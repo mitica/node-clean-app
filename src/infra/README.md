@@ -20,3 +20,5 @@ The **infrastructure** layer contains implementations of interfaces defined in t
 
 - `database/` - Database connection, migrations, seeds, and caching
 - `repository/` - Concrete implementations of domain repositories
+  - `query/` - Query builder abstraction for flexible filtering, sorting, and pagination
+- `services/` - External service integrations (e.g., JWT)

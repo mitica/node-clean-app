@@ -7,7 +7,7 @@ The **config** layer contains application configuration and dependency injection
 - Define **configuration** values (environment variables, constants)
 - Set up **dependency injection** (wiring layers together)
 - Initialize **application context** (repositories, use cases)
-- Configure **event bus** and listeners
+- Register **repository hooks** (entity lifecycle callbacks)
 
 ## Key Principles
 
@@ -19,8 +19,7 @@ The **config** layer contains application configuration and dependency injection
 
 - `config.ts` - Environment configuration
 - `app-context.ts` - Application context (shared infra + per-request)
-- `event-bus.ts` - Event bus configuration
-- `repo.ts` - Repository instantiation
+- `repo.ts` - Repository instantiation and hook registration
 - `usecase.ts` - Use case instantiation
 
 ## AppContext Pattern

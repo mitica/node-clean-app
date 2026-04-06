@@ -28,12 +28,21 @@ src/
 	app/            # Use cases, business logic
 		user/
 			user-login-usecase.ts
+		hooks/          # Entity lifecycle hooks
+			on-entity-created.ts
+			on-entity-updated.ts
+			on-entity-deleted.ts
+			user.ts
+			worker-task.ts
 	config/                 # App configuration and context
 	domain/                 # Core domain models, entities, base types
 		entity/
 			user.ts
+			worker-task.ts
 		repository/
+			repository.ts
 			user-repository.ts
+			worker-task-repository.ts
 	infra/         # Database, cache, external services
 		database/
 			db.ts
@@ -46,12 +55,27 @@ src/
 				drop-cache.ts
 		repository/
 			db-user-repository.ts
+			db-worker-task-repository.ts
+			query/          # Query builder abstraction
+				db-query-builder.ts
+				query-builder-factory.ts
+				query-builder.ts
+		services/
+			jwt.ts
 	api/           # HTTP layer, controllers, middleware
 		app.ts
 		controllers/
 			user-controller.ts
+			auth-controller.ts
 		middleware/
 			auth-middleware.ts
+			context-middleware.ts
+			error-handler.ts
+	worker/         # Background task worker
+		run.ts
+		worker.ts
+		worker-app.ts
+		handlers/
 	typings/
 		global.d.ts           # TypeScript global types
 docker/
@@ -153,76 +177,57 @@ See `package.json` for all available scripts, including:
 - Add controllers and routes in `src/api/controllers/`
 - Configure middleware in `src/api/middleware/`
 
-## Domain Event Bus
+## Repository Hooks
 
-The application includes a **type-safe singleton event bus** for domain events, using TypeScript's declaration merging pattern.
+The application uses **repository-level event hooks** for entity lifecycle events. Repositories extend `TypedEventEmitter` and emit events (`entityCreated`, `entityUpdated`, `entityDeleted`) which are handled by hook functions registered at startup.
 
 ### Architecture
 
 | File | Purpose |
 |------|---------|
-| `src/domain/base/domain-event.ts` | Defines `DomainEventRegistry` interface + helper types |
-| `src/domain/base/event-bus.ts` | `IDomainEventBus` interface + `DomainEventBus` class |
-| `src/config/event-bus.ts` | Singleton instance |
-| `src/domain/entity/*.events.ts` | Entity events via declaration merging |
+| `src/domain/repository/repository.ts` | `BaseRepository` with typed event emitting |
+| `src/config/repo.ts` | Registers hooks on repository instances |
+| `src/app/hooks/on-entity-created.ts` | Dispatches to entity-specific created hooks |
+| `src/app/hooks/on-entity-updated.ts` | Dispatches to entity-specific updated hooks |
+| `src/app/hooks/on-entity-deleted.ts` | Dispatches to entity-specific deleted hooks |
+| `src/app/hooks/user.ts` | User-specific hook handlers |
+| `src/app/hooks/worker-task.ts` | Worker task hook handlers |
 
-### Registering Events for a New Entity
+### Registering Hooks for a New Entity
 
-1. **Create `{entity}.events.ts`** in `src/domain/entity/`:
+1. **Create entity-specific hooks** in `src/app/hooks/{entity}.ts`:
 
 ```typescript
-import { EntityCreatedEvent, EntityDeletedEvent, EntityUpdatedEvent } from "../base/domain-event";
-import { Order, OrderUpdateData } from "./order";
-import { EntityId } from "../base/types";
+import { AppContext } from "../../config";
+import { Order, OrderData } from "../../domain";
+import { RepositoryEvents } from "../../domain/repository";
 
-declare module "../base/domain-event" {
-  interface DomainEventRegistry {
-    "order:created": EntityCreatedEvent<Order>;
-    "order:updated": EntityUpdatedEvent<Order, OrderUpdateData>;
-    "order:deleted": EntityDeletedEvent<Order>;
-    "order:preDelete": EntityId;
-  }
+export const onOrderCreated = async (
+  input: RepositoryEvents<OrderData, Order>["entityCreated"],
+  ctx: AppContext
+) => {
+  // Handle order creation side effects
+};
+```
+
+2. **Register in the dispatchers** (`on-entity-created.ts`, etc.):
+
+```typescript
+import { Order } from "../../domain";
+import { onOrderCreated } from "./order";
+
+// Inside onEntityCreated function:
+if (entity instanceof Order) {
+  promises.push(onOrderCreated({ entity, opt }, ctx));
 }
-```
-
-2. **Export from `src/domain/entity/index.ts`**:
-
-```typescript
-export * from "./order.events";
-```
-
-3. **Implement `getEventPrefix()` in repository**:
-
-```typescript
-export class OrderDbRepository extends DbRepository<...> {
-  protected override getEventPrefix(): string {
-    return "order";
-  }
-}
-```
-
-### Subscribing to Events
-
-```typescript
-import { eventBus } from "../config";
-import "../domain/entity/user.events"; // Ensure declaration merging is applied
-
-// Full type safety - payload is typed as EntityCreatedEvent<User>
-eventBus.on("user:created", (event) => {
-  console.log(event.payload.entity.email); // ✅ Typed!
-});
-
-// TypeScript error: "invalid:event" not in registry
-eventBus.on("invalid:event", () => {}); // ❌ Compile error!
 ```
 
 ### Key Benefits
 
-- **Strong types**: Event names and payloads are checked at compile time
-- **Singleton**: One subscription point for the entire app
-- **Clean Architecture**: Domain defines types, Config provides instance
-- **Extensible**: Each entity registers its own events via declaration merging
-- **Testable**: `resetEventBus()` for test isolation
+- **Simple**: Direct function calls instead of pub/sub indirection
+- **Type-safe**: Hook inputs are fully typed via `RepositoryEvents`
+- **Traceable**: Easy to follow the code path from repository to hook
+- **Context-aware**: Hooks receive `AppContext` for accessing other repositories and services
 
 ## License
 

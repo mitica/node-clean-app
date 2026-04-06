@@ -2,9 +2,6 @@ import { config } from "../config";
 import { AppContext } from "../config/app-context";
 import { WorkerApp } from "./worker-app";
 
-// Register event handlers
-import "../app/listeners";
-
 /**
  * Main entry point for running the worker standalone
  */
@@ -41,6 +38,7 @@ async function main(): Promise<void> {
     process.exit(0);
   });
 
+  let error: Error | null = null;
   try {
     await app.start();
 
@@ -54,8 +52,14 @@ async function main(): Promise<void> {
 
     // Keep the process running
     console.log("\nPress Ctrl+C to stop the worker(s)\n");
-  } catch (error) {
-    console.error("❌ Failed to start worker:", error);
+  } catch (err) {
+    console.error("❌ Failed to start worker:", err);
+    error = err instanceof Error ? err : new Error(String(err));
+  }
+  await app.stop();
+  await ctx.close();
+
+  if (error) {
     process.exit(1);
   }
 }

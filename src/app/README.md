@@ -6,7 +6,7 @@ The **app** layer contains the use cases that orchestrate the domain entities to
 
 - Define **use cases** (application-specific business rules)
 - Orchestrate domain entities and services
-- Define **event listeners** for domain events
+- Define **hooks** for repository entity lifecycle events (created, updated, deleted)
 - Coordinate transactions and workflows
 
 ## Key Principles
