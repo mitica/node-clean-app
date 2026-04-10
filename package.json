@@ -75,7 +75,7 @@
     "vitest": "^4.1.4"
   },
   "dependencies": {
-    "@hono/node-server": "^1.19.3",
+    "@hono/node-server": "^1.19.13",
     "ajv": "^8.18.0",
     "ajv-formats": "^3.0.1",
     "atonic": "^1.0.4",
