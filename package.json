@@ -84,7 +84,7 @@
     "decamelize": "^6.0.1",
     "dotenv": "^17.2.2",
     "emittery": "^1.2.0",
-    "hono": "^4.12.7",
+    "hono": "^4.12.12",
     "ioredis": "^5.7.0",
     "json-schema": "^0.4.0",
     "jsonwebtoken": "^9.0.3",
