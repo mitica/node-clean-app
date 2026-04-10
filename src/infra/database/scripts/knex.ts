@@ -36,7 +36,7 @@ main()
     await knex.destroy();
     return process.exit();
   })
-  .catch(async error => {
+  .catch(async (error) => {
     console.error(error);
     await knex.destroy();
     process.exit(1);

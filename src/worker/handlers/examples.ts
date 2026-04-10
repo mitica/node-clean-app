@@ -2,7 +2,7 @@ import { TaskHandlerRegistration } from "../../domain/worker";
 
 /**
  * Example email task handler
- * 
+ *
  * Usage:
  * ```typescript
  * await createWorkerTask(ctx, {
@@ -34,7 +34,7 @@ export const emailSendHandler: TaskHandlerRegistration = {
     if (isShuttingDown()) {
       return {
         success: false,
-        error: new Error("Worker shutting down, task will be retried")
+        error: new Error("Worker shutting down, task will be retried"),
       };
     }
 
@@ -51,10 +51,10 @@ export const emailSendHandler: TaskHandlerRegistration = {
       success: true,
       result: {
         sentAt: new Date().toISOString(),
-        recipient: to
-      }
+        recipient: to,
+      },
     };
-  }
+  },
 };
 
 /**
@@ -78,7 +78,7 @@ export const reportGenerateHandler: TaskHandlerRegistration = {
       if (isShuttingDown()) {
         return {
           success: false,
-          error: new Error("Worker shutting down, task will be retried")
+          error: new Error("Worker shutting down, task will be retried"),
         };
       }
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -91,10 +91,10 @@ export const reportGenerateHandler: TaskHandlerRegistration = {
       result: {
         generatedAt: new Date().toISOString(),
         reportType,
-        fileUrl: `/reports/${reportType}-${task.id}.pdf`
-      }
+        fileUrl: `/reports/${reportType}-${task.id}.pdf`,
+      },
     };
-  }
+  },
 };
 
 /**
@@ -123,10 +123,10 @@ export const dataSyncHandler: TaskHandlerRegistration = {
         syncedAt: new Date().toISOString(),
         source,
         target,
-        recordsProcessed: 100
-      }
+        recordsProcessed: 100,
+      },
     };
-  }
+  },
 };
 
 /**
@@ -135,5 +135,5 @@ export const dataSyncHandler: TaskHandlerRegistration = {
 export const exampleHandlers: TaskHandlerRegistration[] = [
   emailSendHandler,
   reportGenerateHandler,
-  dataSyncHandler
+  dataSyncHandler,
 ];

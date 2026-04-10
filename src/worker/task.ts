@@ -13,14 +13,10 @@ export enum WorkerTaskType {
 /**
  * Create a new worker task
  */
-export type CreateTaskOptions = Partial<
-  Omit<WorkerTaskCreateData, "type" | "payload" | "type">
-> &
+export type CreateTaskOptions = Partial<Omit<WorkerTaskCreateData, "type" | "payload" | "type">> &
   Pick<WorkerTaskCreateData, "type" | "payload"> & { type: WorkerTaskType };
 
-const createWorkerTaskData = (
-  options: CreateTaskOptions
-): WorkerTaskCreateData => {
+const createWorkerTaskData = (options: CreateTaskOptions): WorkerTaskCreateData => {
   return {
     status: WorkerTaskStatus.PENDING,
     priority: WorkerTaskPriority.NORMAL,

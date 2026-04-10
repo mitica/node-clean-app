@@ -86,22 +86,14 @@ export class DbQueryBuilder<
     direction,
     asName,
   }: FormatFieldInput): FormatFieldResult {
-    if (
-      fname === null ||
-      fname === undefined ||
-      fname.toString().trim() === ""
-    ) {
+    if (fname === null || fname === undefined || fname.toString().trim() === "") {
       throw new InvalidInputError(
-        `Filter field name is empty for ${tableName} (${JSON.stringify(
-          params
-        )})`
+        `Filter field name is empty for ${tableName} (${JSON.stringify(params)})`
       );
     }
     const parts = String(fname).split(/__/g);
     const fieldName = toSnakeCase(parts[0]);
-    const name = /^\d+$/.test(fieldName)
-      ? fieldName
-      : `"${tableName}"."${fieldName}"`;
+    const name = /^\d+$/.test(fieldName) ? fieldName : `"${tableName}"."${fieldName}"`;
 
     return {
       tableName,
@@ -140,44 +132,34 @@ export class DbQueryBuilder<
 
     if (value === null) {
       if (olp === SqlLogicalOperator.OR) {
-        query.orWhereRaw(
-            `${name} ${filter.op === SqlOperator.NEQ ? "is not" : "is"} null`
-          );
+        query.orWhereRaw(`${name} ${filter.op === SqlOperator.NEQ ? "is not" : "is"} null`);
       } else {
-        query.whereRaw(
-            `${name} ${filter.op === SqlOperator.NEQ ? "is not" : "is"} null`
-          );
+        query.whereRaw(`${name} ${filter.op === SqlOperator.NEQ ? "is not" : "is"} null`);
       }
     } else {
       if (Array.isArray(value) && !Buffer.isBuffer(value)) {
         if (value.length === 0) return query;
         if (olp === SqlLogicalOperator.OR) {
           query.orWhereRaw(
-              `${name}${filter.op === SqlOperator.NEQ ? " not" : ""} in (${value
-                .map((_) => `?`)
-                .join(",")})`,
-              value
-            );
+            `${name}${filter.op === SqlOperator.NEQ ? " not" : ""} in (${value
+              .map((_) => `?`)
+              .join(",")})`,
+            value
+          );
         } else {
           query.whereRaw(
-              `${name}${filter.op === SqlOperator.NEQ ? " not" : ""} in (${value
-                .map((_) => `?`)
-                .join(",")})`,
-              value
-            );
+            `${name}${filter.op === SqlOperator.NEQ ? " not" : ""} in (${value
+              .map((_) => `?`)
+              .join(",")})`,
+            value
+          );
         }
       } else if (filter.value !== undefined) {
         if (filter.op === SqlOperator.CONTAINS) {
           if (olp === SqlLogicalOperator.OR) {
-            query.orWhereRaw(
-                `${name} like '%' || ? || '%'`,
-                value.toString().trim().toLowerCase()
-              );
+            query.orWhereRaw(`${name} like '%' || ? || '%'`, value.toString().trim().toLowerCase());
           } else {
-            query.whereRaw(
-                `${name} like '%' || ? || '%'`,
-                value.toString().trim().toLowerCase()
-              );
+            query.whereRaw(`${name} like '%' || ? || '%'`, value.toString().trim().toLowerCase());
           }
         } else if (filter.op === SqlOperator.EXISTS) {
           const existsFn = (qb: Knex.QueryInterface) =>
@@ -225,36 +207,31 @@ export class DbQueryBuilder<
   ) {
     if (!filters?.length) return this;
     for (const filter of filters) {
-      if (filter.value === undefined)
-        throw new InvalidInputError(`Filter value is undefined`);
+      if (filter.value === undefined) throw new InvalidInputError(`Filter value is undefined`);
       const olp = filter.lop || SqlLogicalOperator.AND;
       this.queryFilterField(query, { params, tableName, filter, parent });
-      if (
-        filter.op !== SqlOperator.EXISTS &&
-        filter.filter &&
-        filter.filter.length
-      ) {
+      if (filter.op !== SqlOperator.EXISTS && filter.filter && filter.filter.length) {
         const subfilter = filter.filter;
         if (olp === SqlLogicalOperator.OR) {
           query.orWhere((qb) =>
-              this.applyFilters(qb, {
-                filters: subfilter,
-                params,
-                tableName,
-                parent: filter,
-                findParams: params,
-              })
-            );
+            this.applyFilters(qb, {
+              filters: subfilter,
+              params,
+              tableName,
+              parent: filter,
+              findParams: params,
+            })
+          );
         } else {
           query.where((qb) =>
-              this.applyFilters(qb, {
-                filters: subfilter,
-                params,
-                tableName,
-                parent: filter,
-                findParams: params,
-              })
-            );
+            this.applyFilters(qb, {
+              filters: subfilter,
+              params,
+              tableName,
+              parent: filter,
+              findParams: params,
+            })
+          );
         }
       }
     }
@@ -316,26 +293,20 @@ export class DbQueryBuilder<
     // console.log("Sort Fields:", sort);
     sort.forEach(({ name, direction, nullsLast }) => {
       // console.log("Sorting by:", { name, direction, nullsLast });
-      const { name: fieldName, direction: fieldDirection } =
-        this.formatFilterField({
-          params,
-          tableName,
-          fname: name.toString(),
-          value: 0,
-          direction,
-        });
-      query.orderByRaw(
-        `${fieldName} ${fieldDirection}${nullsLast ? " NULLS LAST" : ""}`
-      );
+      const { name: fieldName, direction: fieldDirection } = this.formatFilterField({
+        params,
+        tableName,
+        fname: name.toString(),
+        value: 0,
+        direction,
+      });
+      query.orderByRaw(`${fieldName} ${fieldDirection}${nullsLast ? " NULLS LAST" : ""}`);
     });
 
     return this;
   }
 
-  applySelect(
-    query: Knex.QueryInterface,
-    { select, params, tableName }: ApplySelectInput
-  ) {
+  applySelect(query: Knex.QueryInterface, { select, params, tableName }: ApplySelectInput) {
     if (select?.length) {
       const fields = select.map(
         (it, i) =>
@@ -353,10 +324,7 @@ export class DbQueryBuilder<
     return this;
   }
 
-  public build(
-    query: Knex.QueryInterface,
-    params: FindParams<TFindParams> | StatsParams
-  ) {
+  public build(query: Knex.QueryInterface, params: FindParams<TFindParams> | StatsParams) {
     const tableName = this.tableName;
     this.applyJoins(query, {
       params,
@@ -377,8 +345,7 @@ export class DbQueryBuilder<
       findParams: params,
     });
 
-    if (params.sort?.length)
-      this.applySort(query, { params, tableName, findParams: params });
+    if (params.sort?.length) this.applySort(query, { params, tableName, findParams: params });
     else query.orderBy(`${tableName}.id`, "ASC");
 
     // if (params.first) query.limit(params.first);
@@ -388,11 +355,7 @@ export class DbQueryBuilder<
   }
 }
 
-const applyFunctions = (
-  fs: string[],
-  fullFieldName: string,
-  asName?: string
-): string => {
+const applyFunctions = (fs: string[], fullFieldName: string, asName?: string): string => {
   let name = fullFieldName;
   if (fs.length > 0) {
     for (let i = fs.length - 1; i >= 0; i--) {
@@ -437,9 +400,7 @@ const applyFunction = (f: string, fullFieldName: string): string => {
         case "year":
           return `date_trunc('year', ${fullFieldName})`;
         default:
-          throw new InvalidInputError(
-            `Unsupported truncate type: ${truncType}`
-          );
+          throw new InvalidInputError(`Unsupported truncate type: ${truncType}`);
       }
     }
     case "count_distinct":

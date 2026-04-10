@@ -44,9 +44,7 @@ function getSecret(): string {
   if (config.nodeEnv !== "development") {
     throw new Error("JWT_SECRET is required in non-development environments");
   }
-  console.warn(
-    "WARNING: Using default development JWT secret. Do NOT use in production!"
-  );
+  console.warn("WARNING: Using default development JWT secret. Do NOT use in production!");
   return "dev-secret-do-not-use-in-production";
 }
 
@@ -57,11 +55,7 @@ function getSecret(): string {
 /**
  * Generate access and refresh tokens for a user.
  */
-export function generateTokenPair(
-  userId: EntityId,
-  email: string,
-  role: string
-): TokenPair {
+export function generateTokenPair(userId: EntityId, email: string, role: string): TokenPair {
   const secret = getSecret();
   const accessExpiry = config.jwt.accessTokenExpiresIn as StringValue;
   const refreshExpiry = config.jwt.refreshTokenExpiresIn as StringValue;
@@ -71,11 +65,11 @@ export function generateTokenPair(
     audience: config.jwt.audience,
   };
 
-  const accessToken = jwt.sign(
-    { sub: userId, email, role, type: "access" } as JwtPayload,
-    secret,
-    { ...baseOptions, jwtid: uuidv4(), expiresIn: accessExpiry }
-  );
+  const accessToken = jwt.sign({ sub: userId, email, role, type: "access" } as JwtPayload, secret, {
+    ...baseOptions,
+    jwtid: uuidv4(),
+    expiresIn: accessExpiry,
+  });
 
   const refreshToken = jwt.sign(
     { sub: userId, email, role, type: "refresh" } as JwtPayload,
@@ -105,21 +99,14 @@ export function verifyRefreshToken(token: string): TokenVerifyResult {
   return verifyToken(token, "refresh");
 }
 
-function verifyToken(
-  token: string,
-  expectedType: "access" | "refresh"
-): TokenVerifyResult {
+function verifyToken(token: string, expectedType: "access" | "refresh"): TokenVerifyResult {
   const verifyOptions: VerifyOptions = {
     issuer: config.jwt.issuer,
     audience: config.jwt.audience,
   };
 
   try {
-    const decoded = jwt.verify(
-      token,
-      getSecret(),
-      verifyOptions
-    ) as unknown as JwtPayload;
+    const decoded = jwt.verify(token, getSecret(), verifyOptions) as unknown as JwtPayload;
 
     if (decoded.type !== expectedType) {
       return {

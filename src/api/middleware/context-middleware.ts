@@ -11,9 +11,7 @@ import { HonoEnv } from "../types";
  *
  * @param ctx The shared application context
  */
-export const createContextMiddleware = (
-  ctx: AppContext
-): MiddlewareHandler<HonoEnv> => {
+export const createContextMiddleware = (ctx: AppContext): MiddlewareHandler<HonoEnv> => {
   return async (c: Context<HonoEnv>, next: Next): Promise<void | Response> => {
     // Extract request information
     const requestId = c.req.header("X-Request-ID") || crypto.randomUUID();
@@ -44,9 +42,7 @@ export const createContextMiddleware = (
 export const getRequestContext = (c: Context<HonoEnv>): AppContext => {
   const ctx = c.get("requestContext");
   if (!ctx) {
-    throw new Error(
-      "AppContext not found. Ensure contextMiddleware is registered."
-    );
+    throw new Error("AppContext not found. Ensure contextMiddleware is registered.");
   }
   return ctx;
 };

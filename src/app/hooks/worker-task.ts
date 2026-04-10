@@ -24,15 +24,11 @@ export interface WorkerTaskRetryingInput {
 }
 
 export async function onWorkerTaskStarted(input: WorkerTaskStartedInput) {
-  console.log(
-    `[Hook] Task ${input.task.id} started by worker ${input.workerId}`
-  );
+  console.log(`[Hook] Task ${input.task.id} started by worker ${input.workerId}`);
 }
 
 export async function onWorkerTaskCompleted(input: WorkerTaskCompletedInput) {
-  console.log(
-    `[Hook] Task ${input.task.id} completed in ${input.duration}ms`
-  );
+  console.log(`[Hook] Task ${input.task.id} completed in ${input.duration}ms`);
 }
 
 export async function onWorkerTaskFailed(input: WorkerTaskFailedInput) {

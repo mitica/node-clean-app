@@ -24,9 +24,7 @@ export interface TaskHandlerContext {
 /**
  * Task handler function type
  */
-export type TaskHandler = (
-  context: TaskHandlerContext
-) => Promise<TaskHandlerResult>;
+export type TaskHandler = (context: TaskHandlerContext) => Promise<TaskHandlerResult>;
 
 /**
  * Task handler registration

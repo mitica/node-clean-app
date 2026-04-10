@@ -38,11 +38,7 @@ export abstract class BaseCacheStorage implements CacheStorage {
   constructor(private prefix: string) {}
   abstract getCacheValue<T = Record<string, unknown>>(key: string): Promise<T | undefined>;
 
-  abstract setCacheValue<T>(
-    key: string,
-    value: T,
-    ttlSeconds: number
-  ): Promise<void>;
+  abstract setCacheValue<T>(key: string, value: T, ttlSeconds: number): Promise<void>;
 
   abstract removeCacheValue(key: string[]): Promise<void>;
 
@@ -50,10 +46,7 @@ export abstract class BaseCacheStorage implements CacheStorage {
     return `${this.prefix}_${input.join("_")}`;
   }
 
-  private toEntity<T>(
-    data: T,
-    { entityBuilder }: CacheStorageExecuteCachedOptions
-  ): T {
+  private toEntity<T>(data: T, { entityBuilder }: CacheStorageExecuteCachedOptions): T {
     if (data && entityBuilder) {
       return Array.isArray(data)
         ? (data.map((it) => new entityBuilder(it as never)) as never)
@@ -67,8 +60,8 @@ export abstract class BaseCacheStorage implements CacheStorage {
       return Array.isArray(data)
         ? (data.map((it) => this.toJson(it as never)) as never)
         : data instanceof BaseEntity
-        ? ((data as Entity).getData() as never)
-        : data;
+          ? ((data as Entity).getData() as never)
+          : data;
     }
     return data;
   }

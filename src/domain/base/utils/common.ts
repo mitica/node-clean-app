@@ -78,18 +78,13 @@ export function chunkArray<T>(array: T[], size: number): T[][] {
   return chunks;
 }
 
-export const omitFieldsByValue = <T extends object>(
-  obj: T,
-  values: unknown[]
-): T => {
+export const omitFieldsByValue = <T extends object>(obj: T, values: unknown[]): T => {
   const result: any = { ...obj };
-  for (const key of Object.keys(result))
-    if (values.includes(result[key])) delete result[key];
+  for (const key of Object.keys(result)) if (values.includes(result[key])) delete result[key];
   return result as T;
 };
 
-export const omitNullFields = <T extends object>(obj: T): T =>
-  omitFieldsByValue(obj, [null]);
+export const omitNullFields = <T extends object>(obj: T): T => omitFieldsByValue(obj, [null]);
 
 export const omitUndefinedFields = <T extends object>(obj: T): T =>
   omitFieldsByValue(obj, [undefined]);
@@ -107,37 +102,29 @@ export const uniq = <T>(arr: T[]) => [...new Set(arr)];
  * @param value any value
  * @returns
  */
-export const hasValue = (value?: unknown) =>
-  ![undefined, null, ""].includes(value as never);
+export const hasValue = (value?: unknown) => ![undefined, null, ""].includes(value as never);
 
-export const isEmptyArray = (value: unknown) =>
-  Array.isArray(value) && value.length === 0;
+export const isEmptyArray = (value: unknown) => Array.isArray(value) && value.length === 0;
 
 export const toArray = <T>(input?: T | T[]): T[] =>
   [null, undefined].includes(input as never)
     ? ([] as T[])
     : Array.isArray(input)
-    ? (input as T[])
-    : ([input] as T[]);
+      ? (input as T[])
+      : ([input] as T[]);
 
 export const uniqBy = <T extends object | string>(
   arr: T[],
   prop: keyof T | ((item: T) => unknown)
 ): T[] => {
-  const props = arr.map((item) =>
-    typeof prop === "function" ? prop(item) : (item as any)[prop]
-  );
+  const props = arr.map((item) => (typeof prop === "function" ? prop(item) : (item as any)[prop]));
   return arr.filter((_, index) => props.indexOf(props[index]) === index);
 };
 
 export const objectHash = (data: object): string =>
   objectHashFn(data, { algorithm: "sha1" }).toLowerCase();
 
-export const dataIsEqual = (
-  obj1: object,
-  obj2: object,
-  options?: objectHashFn.NormalOption
-) => {
+export const dataIsEqual = (obj1: object, obj2: object, options?: objectHashFn.NormalOption) => {
   if (obj1 === obj2) return true;
   return objectHashFn(obj1, options) === objectHashFn(obj2, options);
 };
@@ -160,9 +147,7 @@ export function objectToArray<T = any>(obj: Record<string, T> | T[]): T[] {
     .map((k) => obj[k]);
 }
 
-export function isPlainObject(
-  value: unknown
-): value is Record<string, unknown> {
+export function isPlainObject(value: unknown): value is Record<string, unknown> {
   return (
     value !== null &&
     typeof value === "object" &&

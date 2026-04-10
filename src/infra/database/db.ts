@@ -5,15 +5,9 @@ import { type Knex, knex } from "knex";
 // Parse bigint values from Postgres to Int
 types.setTypeParser(types.builtins.INT8, (value) => parseInt(value, 10));
 types.setTypeParser(types.builtins.NUMERIC, (value) => parseFloat(value));
-types.setTypeParser(types.builtins.DATE, (value) =>
-  new Date(value).toISOString()
-);
-types.setTypeParser(types.builtins.TIMESTAMP, (value) =>
-  new Date(value).toISOString()
-);
-types.setTypeParser(types.builtins.TIMESTAMPTZ, (value) =>
-  new Date(value).toISOString()
-);
+types.setTypeParser(types.builtins.DATE, (value) => new Date(value).toISOString());
+types.setTypeParser(types.builtins.TIMESTAMP, (value) => new Date(value).toISOString());
+types.setTypeParser(types.builtins.TIMESTAMPTZ, (value) => new Date(value).toISOString());
 
 types.setTypeParser(600 as never, (value) => {
   // POINT is sent as "(x, y)", so parse it
@@ -33,10 +27,10 @@ export const dbInstance = (newInstance?: Knex): Knex => {
       client: "pg",
       connection: {
         connectionString: config.database.connection,
-        ssl: (process.env.PGSSLMODE && { rejectUnauthorized: false }) || false
+        ssl: (process.env.PGSSLMODE && { rejectUnauthorized: false }) || false,
         // ssl: { rejectUnauthorized: false },
       },
-      debug: false
+      debug: false,
     });
 
   return instance;

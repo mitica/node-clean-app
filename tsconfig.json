@@ -28,6 +28,6 @@
     "strict": true
   },
   "typeRoots": ["node_modules/@types", "node_modules/types", "src/typings"],
-  "exclude": ["src/tests/generated-api-client"],
+  "exclude": ["src/tests/generated-api-client", "src/**/*.test.ts"],
   "include": ["./src"]
 }

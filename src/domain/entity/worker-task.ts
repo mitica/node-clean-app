@@ -4,7 +4,7 @@ import {
   EntityData,
   EntityId,
   EntityUpdateData,
-  RequiredJSONSchema
+  RequiredJSONSchema,
 } from "../base";
 
 /**
@@ -15,7 +15,7 @@ export enum WorkerTaskStatus {
   RUNNING = "RUNNING",
   COMPLETED = "COMPLETED",
   FAILED = "FAILED",
-  CANCELLED = "CANCELLED"
+  CANCELLED = "CANCELLED",
 }
 
 /**
@@ -25,7 +25,7 @@ export enum WorkerTaskPriority {
   LOW = 1,
   NORMAL = 5,
   HIGH = 10,
-  CRITICAL = 20
+  CRITICAL = 20,
 }
 
 /**
@@ -72,10 +72,7 @@ export type WorkerTaskUpdateData = EntityUpdateData<WorkerTaskData>;
 /**
  * Worker Task Entity
  */
-export class WorkerTask
-  extends BaseEntity<WorkerTaskData>
-  implements WorkerTaskData
-{
+export class WorkerTask extends BaseEntity<WorkerTaskData> implements WorkerTaskData {
   get type() {
     return this._data.type;
   }
@@ -127,10 +124,7 @@ export class WorkerTask
 
   /** Check if task can be retried */
   canRetry(): boolean {
-    return (
-      this.status === WorkerTaskStatus.FAILED &&
-      this.attempts < this.maxAttempts
-    );
+    return this.status === WorkerTaskStatus.FAILED && this.attempts < this.maxAttempts;
   }
 
   /** Check if task is stale (lock expired) */
@@ -158,7 +152,7 @@ export class WorkerTask
       errorStack: { type: "string" },
       result: { type: "object" },
       lockedBy: { type: "string", maxLength: 255 },
-      lockedUntil: { type: "string", format: "date-time" }
+      lockedUntil: { type: "string", format: "date-time" },
     },
     required: [
       ...super.jsonSchema.required,
@@ -167,8 +161,8 @@ export class WorkerTask
       "status",
       "priority",
       "attempts",
-      "maxAttempts"
+      "maxAttempts",
     ],
-    additionalProperties: false
+    additionalProperties: false,
   };
 }

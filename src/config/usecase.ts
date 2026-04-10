@@ -1,9 +1,5 @@
 import { RefreshTokenUseCase, UserLoginUseCase } from "../app/user";
-import {
-  EnqueueTaskUseCase,
-  CancelTaskUseCase,
-  RetryTaskUseCase,
-} from "../app/worker";
+import { EnqueueTaskUseCase, CancelTaskUseCase, RetryTaskUseCase } from "../app/worker";
 
 export interface UseCaseContainer {
   login: UserLoginUseCase;

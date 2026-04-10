@@ -56,8 +56,7 @@ export class DomainError extends Error implements IDomainError {
     if (typeof codeOrParams === "string") {
       this.errorCode = codeOrParams;
     } else {
-      this.errorCode =
-        codeOrParams.errorCode || BaseErrorCode.INTERNAL_SERVER_ERROR;
+      this.errorCode = codeOrParams.errorCode || BaseErrorCode.INTERNAL_SERVER_ERROR;
       this.data = codeOrParams.data;
       this.originalError = codeOrParams.originalError;
     }
@@ -96,10 +95,7 @@ export class UnauthorizedError extends DomainError {
   }
 }
 
-function setDefaultErrorCode(
-  codeOrParams: string | ErrorParams,
-  errorCode: string
-) {
+function setDefaultErrorCode(codeOrParams: string | ErrorParams, errorCode: string) {
   if (typeof codeOrParams !== "string") {
     return { errorCode, ...codeOrParams };
   }
@@ -123,10 +119,7 @@ export class InvalidInputError extends ValidationError {
     message: string,
     codeOrParams: string | ErrorParams = BaseErrorCode.INVALID_INPUT
   ) {
-    super(
-      message,
-      setDefaultErrorCode(codeOrParams, BaseErrorCode.INVALID_INPUT)
-    );
+    super(message, setDefaultErrorCode(codeOrParams, BaseErrorCode.INVALID_INPUT));
   }
 }
 
@@ -144,9 +137,6 @@ export class DuplicationError extends ValidationError {
     message: string,
     codeOrParams: string | ErrorParams = BaseErrorCode.DUPLICATION
   ) {
-    super(
-      message,
-      setDefaultErrorCode(codeOrParams, BaseErrorCode.DUPLICATION)
-    );
+    super(message, setDefaultErrorCode(codeOrParams, BaseErrorCode.DUPLICATION));
   }
 }

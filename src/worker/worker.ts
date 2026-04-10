@@ -73,14 +73,10 @@ export class Worker implements IWorker {
    */
   registerHandler(registration: TaskHandlerRegistration): void {
     if (this.handlers.has(registration.type)) {
-      console.warn(
-        `[Worker] Overwriting existing handler for task type: ${registration.type}`
-      );
+      console.warn(`[Worker] Overwriting existing handler for task type: ${registration.type}`);
     }
     this.handlers.set(registration.type, registration);
-    console.log(
-      `[Worker] Registered handler for task type: ${registration.type}`
-    );
+    console.log(`[Worker] Registered handler for task type: ${registration.type}`);
   }
 
   /**
@@ -88,9 +84,7 @@ export class Worker implements IWorker {
    */
   async start(): Promise<void> {
     if (this.running) {
-      console.warn(
-        `[Worker] Worker ${this.config.workerId} is already running`
-      );
+      console.warn(`[Worker] Worker ${this.config.workerId} is already running`);
       return;
     }
 
@@ -103,9 +97,7 @@ export class Worker implements IWorker {
       }`
     );
     if (this.config.omitTaskTypes.length) {
-      console.log(
-        `[Worker] Omit task types: ${this.config.omitTaskTypes.join(", ")}`
-      );
+      console.log(`[Worker] Omit task types: ${this.config.omitTaskTypes.join(", ")}`);
     }
 
     this.running = true;
@@ -154,13 +146,9 @@ export class Worker implements IWorker {
 
     // Wait for active tasks to complete
     if (this.activeTasks.size > 0) {
-      console.log(
-        `[Worker] Waiting for ${this.activeTasks.size} active tasks to complete...`
-      );
+      console.log(`[Worker] Waiting for ${this.activeTasks.size} active tasks to complete...`);
       // Use Promise.all with catch to wait for all tasks regardless of outcome
-      const taskPromises = Array.from(this.activeTasks.values()).map((p) =>
-        p.catch(() => {})
-      );
+      const taskPromises = Array.from(this.activeTasks.values()).map((p) => p.catch(() => {}));
       await Promise.all(taskPromises);
     }
 
@@ -219,12 +207,8 @@ export class Worker implements IWorker {
         const task = await this.taskRepo.acquireNextTask({
           workerId: this.config.workerId,
           lockDuration: this.config.lockDuration,
-          taskTypes: this.config.taskTypes.length
-            ? this.config.taskTypes
-            : undefined,
-          omitTaskTypes: this.config.omitTaskTypes.length
-            ? this.config.omitTaskTypes
-            : undefined,
+          taskTypes: this.config.taskTypes.length ? this.config.taskTypes : undefined,
+          omitTaskTypes: this.config.omitTaskTypes.length ? this.config.omitTaskTypes : undefined,
         });
 
         if (task) {
@@ -266,9 +250,7 @@ export class Worker implements IWorker {
     await onWorkerTaskStarted({ task, workerId: this.config.workerId });
 
     if (!handler) {
-      console.error(
-        `[Worker] No handler registered for task type: ${task.type}`
-      );
+      console.error(`[Worker] No handler registered for task type: ${task.type}`);
       await this.handleTaskFailure(
         task,
         new Error(`No handler for task type: ${task.type}`),
@@ -291,10 +273,7 @@ export class Worker implements IWorker {
       const result = await Promise.race([
         handler.handler(context),
         new Promise<never>((_, reject) =>
-          setTimeout(
-            () => reject(new Error(`Task timeout after ${timeout}ms`)),
-            timeout
-          )
+          setTimeout(() => reject(new Error(`Task timeout after ${timeout}ms`)), timeout)
         ),
       ]);
 
@@ -331,9 +310,7 @@ export class Worker implements IWorker {
       this.stats.tasksProcessed++;
       this.stats.tasksSucceeded++;
 
-      console.log(
-        `[Worker] Task ${task.id} completed successfully in ${duration}ms`
-      );
+      console.log(`[Worker] Task ${task.id} completed successfully in ${duration}ms`);
 
       await onWorkerTaskCompleted({ task: completedTask, result, duration });
     } catch (error) {
@@ -361,9 +338,7 @@ export class Worker implements IWorker {
       this.stats.tasksProcessed++;
       this.stats.tasksFailed++;
 
-      console.error(
-        `[Worker] Task ${task.id} failed after ${duration}ms: ${error.message}`
-      );
+      console.error(`[Worker] Task ${task.id} failed after ${duration}ms: ${error.message}`);
       if (willRetry) {
         console.log(
           `[Worker] Task ${task.id} will be retried (attempt ${task.attempts}/${task.maxAttempts})`

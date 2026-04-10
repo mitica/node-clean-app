@@ -25,12 +25,7 @@ import { DbRepository } from "./db-repository";
 import { IQueryBuilderFactory } from "./query/query-builder-factory";
 
 export class WorkerTaskDbRepository
-  extends DbRepository<
-    WorkerTaskData,
-    WorkerTask,
-    WorkerTaskCreateData,
-    WorkerTaskUpdateData
-  >
+  extends DbRepository<WorkerTaskData, WorkerTask, WorkerTaskCreateData, WorkerTaskUpdateData>
   implements WorkerTaskRepository
 {
   constructor(knex: Knex, queryBuilderFactory: IQueryBuilderFactory) {
@@ -43,12 +38,7 @@ export class WorkerTaskDbRepository
     params: AcquireTaskParams,
     opt?: RepositoryReadOptions
   ): Promise<WorkerTask | null> {
-    const {
-      workerId,
-      lockDuration = 5 * 60 * 1000,
-      taskTypes,
-      omitTaskTypes,
-    } = params;
+    const { workerId, lockDuration = 5 * 60 * 1000, taskTypes, omitTaskTypes } = params;
     const now = new Date();
     const lockedUntil = new Date(now.getTime() + lockDuration);
 
@@ -56,11 +46,7 @@ export class WorkerTaskDbRepository
     const query = this.query(opt)
       .where("status", WorkerTaskStatus.PENDING)
       .where(function () {
-        this.whereNull("scheduled_at").orWhere(
-          "scheduled_at",
-          "<=",
-          now.toISOString()
-        );
+        this.whereNull("scheduled_at").orWhere("scheduled_at", "<=", now.toISOString());
       })
       .orderBy("priority", "desc")
       .orderBy("created_at", "asc")
@@ -100,20 +86,13 @@ export class WorkerTaskDbRepository
     return result ? this.toEntity(result) : null;
   }
 
-  async findPending(
-    input?: FindPendingInput,
-    opt?: RepositoryReadOptions
-  ): Promise<WorkerTask[]> {
+  async findPending(input?: FindPendingInput, opt?: RepositoryReadOptions): Promise<WorkerTask[]> {
     const { taskTypes, omitTaskTypes, limit = 100 } = input || {};
     const now = new Date();
     const query = this.query(opt)
       .where("status", WorkerTaskStatus.PENDING)
       .where(function () {
-        this.whereNull("scheduled_at").orWhere(
-          "scheduled_at",
-          "<=",
-          now.toISOString()
-        );
+        this.whereNull("scheduled_at").orWhere("scheduled_at", "<=", now.toISOString());
       })
       .orderBy("priority", "desc")
       .orderBy("created_at", "asc")
@@ -148,10 +127,7 @@ export class WorkerTaskDbRepository
     return items.map((item: WorkerTaskData) => this.toEntity(item));
   }
 
-  async markCompleted(
-    input: MarkCompletedInput,
-    opt: RepositoryWriteOptions
-  ): Promise<WorkerTask> {
+  async markCompleted(input: MarkCompletedInput, opt: RepositoryWriteOptions): Promise<WorkerTask> {
     const { id, result } = input;
     const now = new Date().toISOString();
     const updated = await this.query(opt)
@@ -175,10 +151,7 @@ export class WorkerTaskDbRepository
     return this.toEntity(updated[0]);
   }
 
-  async markFailed(
-    input: MarkFailedInput,
-    opt: RepositoryWriteOptions
-  ): Promise<WorkerTask> {
+  async markFailed(input: MarkFailedInput, opt: RepositoryWriteOptions): Promise<WorkerTask> {
     const { id, error } = input;
     const now = new Date().toISOString();
     const task = await this.findById(id, opt);
@@ -189,9 +162,7 @@ export class WorkerTaskDbRepository
 
     // Determine final status based on retry eligibility
     const canRetry = task.attempts < task.maxAttempts;
-    const status = canRetry
-      ? WorkerTaskStatus.PENDING
-      : WorkerTaskStatus.FAILED;
+    const status = canRetry ? WorkerTaskStatus.PENDING : WorkerTaskStatus.FAILED;
 
     const updated = await this.query(opt)
       .where("id", id)
@@ -209,10 +180,7 @@ export class WorkerTaskDbRepository
     return this.toEntity(updated[0]);
   }
 
-  async releaseLock(
-    input: ReleaseLockInput,
-    opt: RepositoryWriteOptions
-  ): Promise<WorkerTask> {
+  async releaseLock(input: ReleaseLockInput, opt: RepositoryWriteOptions): Promise<WorkerTask> {
     const { id } = input;
     const now = new Date().toISOString();
     const updated = await this.query(opt)
@@ -249,24 +217,15 @@ export class WorkerTaskDbRepository
     return result;
   }
 
-  async countByStatus(
-    input: CountByStatusInput,
-    opt?: RepositoryReadOptions
-  ): Promise<number> {
+  async countByStatus(input: CountByStatusInput, opt?: RepositoryReadOptions): Promise<number> {
     const { status } = input;
-    const result = await this.query(opt)
-      .where("status", status)
-      .count("id as count")
-      .first();
+    const result = await this.query(opt).where("status", status).count("id as count").first();
 
     return parseInt(String(result?.count || "0"), 10);
   }
 
   async getStats(opt?: RepositoryReadOptions): Promise<WorkerTaskStats> {
-    const result = await this.query(opt)
-      .select("status")
-      .count("id as count")
-      .groupBy("status");
+    const result = await this.query(opt).select("status").count("id as count").groupBy("status");
 
     const stats: WorkerTaskStats = {
       pending: 0,
@@ -303,10 +262,7 @@ export class WorkerTaskDbRepository
     return stats;
   }
 
-  async cleanupOldTasks(
-    input: CleanupOldTasksInput,
-    opt: RepositoryWriteOptions
-  ): Promise<number> {
+  async cleanupOldTasks(input: CleanupOldTasksInput, opt: RepositoryWriteOptions): Promise<number> {
     const { olderThanDays } = input;
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
@@ -343,17 +299,13 @@ export class WorkerTaskDbRepository
     }
 
     // Check for existing task with same key
-    const existing = await this.findByIdempotencyKey(
-      { key: data.idempotencyKey },
-      opt
-    );
+    const existing = await this.findByIdempotencyKey({ key: data.idempotencyKey }, opt);
 
     if (existing) {
       // Return existing task if it's still active (PENDING/RUNNING)
-      const isActive = [
-        WorkerTaskStatus.PENDING,
-        WorkerTaskStatus.RUNNING,
-      ].includes(existing.status);
+      const isActive = [WorkerTaskStatus.PENDING, WorkerTaskStatus.RUNNING].includes(
+        existing.status
+      );
 
       if (isActive) {
         return { task: existing, created: false };

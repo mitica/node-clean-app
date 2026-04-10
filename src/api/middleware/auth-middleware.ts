@@ -104,9 +104,7 @@ async function handleJwtAuth(
   // Validate Bearer token format
   const tokenMatch = authHeader.match(/^Bearer\s+(.+)$/);
   if (!tokenMatch) {
-    throw new UnauthorizedError(
-      "Authorization header must be in format: Bearer <token>"
-    );
+    throw new UnauthorizedError("Authorization header must be in format: Bearer <token>");
   }
 
   const token = tokenMatch[1];
@@ -126,9 +124,7 @@ async function handleJwtAuth(
   // Token is valid - load user and enrich context
   const currentCtx = c.get("requestContext");
   const userId =
-    typeof result.payload.sub === "string"
-      ? parseInt(result.payload.sub, 10)
-      : result.payload.sub;
+    typeof result.payload.sub === "string" ? parseInt(result.payload.sub, 10) : result.payload.sub;
 
   try {
     const user = await currentCtx.repo.user.findById(userId);

@@ -51,11 +51,12 @@ export class WorkerApp {
   private readonly workerConfigs: WorkerInstanceConfig[];
   private allHandlers: TaskHandlerRegistration[] = [];
 
-  constructor(private ctx: AppContext, config?: WorkerAppConfig) {
+  constructor(
+    private ctx: AppContext,
+    config?: WorkerAppConfig
+  ) {
     // Default to single worker if no config provided
-    this.workerConfigs = config?.workers?.length
-      ? config.workers
-      : [{ name: "default" }];
+    this.workerConfigs = config?.workers?.length ? config.workers : [{ name: "default" }];
   }
 
   /**
@@ -118,10 +119,7 @@ export class WorkerApp {
   /**
    * Register handlers for a specific worker based on its configuration
    */
-  private registerHandlersForWorker(
-    worker: Worker,
-    workerConfig: WorkerInstanceConfig
-  ): void {
+  private registerHandlersForWorker(worker: Worker, workerConfig: WorkerInstanceConfig): void {
     for (const handler of this.allHandlers) {
       // If handlerTypes is specified, only register matching handlers
       if (workerConfig.handlerTypes?.length) {
@@ -153,9 +151,7 @@ export class WorkerApp {
    * Get a specific worker by name
    */
   getWorker(name: string): Worker | undefined {
-    return this.workers.find((w) =>
-      w.getStats().workerId.includes(`-${name}-`)
-    );
+    return this.workers.find((w) => w.getStats().workerId.includes(`-${name}-`));
   }
 
   /**

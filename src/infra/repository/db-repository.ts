@@ -41,21 +41,13 @@ export abstract class DbRepository<
   TCreate extends EntityCreateData<EntityData> = EntityCreateData<TData>,
   TUpdate extends EntityUpdateData<TData> = EntityUpdateData<TData>,
   TFindParams extends FindBaseParams = FindBaseParams,
-  Events extends RepositoryEvents<TData, TEntity> = RepositoryEvents<
+  Events extends RepositoryEvents<TData, TEntity> = RepositoryEvents<TData, TEntity>,
+  TOptions extends DbRepositoryOptions<TData, TCreate, TUpdate> = DbRepositoryOptions<
     TData,
-    TEntity
+    TCreate,
+    TUpdate
   >,
-  TOptions extends DbRepositoryOptions<TData, TCreate, TUpdate> =
-    DbRepositoryOptions<TData, TCreate, TUpdate>,
-> extends BaseRepository<
-  TData,
-  TEntity,
-  TCreate,
-  TUpdate,
-  TFindParams,
-  Events,
-  TOptions
-> {
+> extends BaseRepository<TData, TEntity, TCreate, TUpdate, TFindParams, Events, TOptions> {
   // protected readonly knex = dbWriter();
   protected readonly tableName: string;
   // protected readonly isLangTable: boolean;
@@ -84,9 +76,7 @@ export abstract class DbRepository<
   }
 
   override toEntity(data: TData): TEntity {
-    return super.toEntity(
-      camelCaseKeys(data as Record<string, unknown>) as TData
-    );
+    return super.toEntity(camelCaseKeys(data as Record<string, unknown>) as TData);
   }
 
   protected getQueryBuilder() {
@@ -104,17 +94,11 @@ export abstract class DbRepository<
     return this.knex.transaction<T>(scope);
   }
 
-  protected toQuery(
-    params: FindParams<TFindParams> | StatsParams,
-    ops?: RepositoryReadOptions
-  ) {
+  protected toQuery(params: FindParams<TFindParams> | StatsParams, ops?: RepositoryReadOptions) {
     return this.getQueryBuilder().build(this.query(ops), params);
   }
 
-  async find(
-    params: FindParams<TFindParams>,
-    ops?: RepositoryReadOptions
-  ): Promise<TEntity[]> {
+  async find(params: FindParams<TFindParams>, ops?: RepositoryReadOptions): Promise<TEntity[]> {
     const query = this.toQuery(params, ops);
     const { first, after, offset } = params;
 
@@ -124,14 +108,9 @@ export abstract class DbRepository<
     return this.toEntities(rows);
   }
 
-  async ids(
-    params: FindParams<TFindParams>,
-    ops?: RepositoryReadOptions
-  ): Promise<EntityId[]> {
+  async ids(params: FindParams<TFindParams>, ops?: RepositoryReadOptions): Promise<EntityId[]> {
     const table = this.getTableName();
-    const query = this.toQuery(params, ops)
-      .clearSelect()
-      .select(`"${table}".id`);
+    const query = this.toQuery(params, ops).clearSelect().select(`"${table}".id`);
     const { first, after, offset } = params;
 
     if (first) query.limit(first);
@@ -140,10 +119,7 @@ export abstract class DbRepository<
     return rows.map((it: { id: string }) => it.id);
   }
 
-  async count(
-    params: TFindParams,
-    ops?: RepositoryReadOptions
-  ): Promise<number> {
+  async count(params: TFindParams, ops?: RepositoryReadOptions): Promise<number> {
     const tableName = this.getTableName();
     const query = this.query(ops);
     const builder = this.getQueryBuilder();
@@ -164,10 +140,7 @@ export abstract class DbRepository<
     return rows[0].count as number;
   }
 
-  override async statsList(
-    params: StatsParams,
-    ops?: RepositoryReadOptions
-  ): Promise<StatsData[]> {
+  override async statsList(params: StatsParams, ops?: RepositoryReadOptions): Promise<StatsData[]> {
     const query = this.toQuery(params, ops);
 
     const { first, offset } = params;
@@ -181,10 +154,7 @@ export abstract class DbRepository<
     return rows.map<StatsData>((row) => ({ values: Object.values(row) }));
   }
 
-  override async statsCount(
-    params: BaseStatsParams,
-    ops?: RepositoryReadOptions
-  ): Promise<number> {
+  override async statsCount(params: BaseStatsParams, ops?: RepositoryReadOptions): Promise<number> {
     const table = this.getTableName();
     const query = this.query(ops);
     const builder = this.getQueryBuilder();
@@ -208,21 +178,12 @@ export abstract class DbRepository<
     return row.count as number;
   }
 
-  async deleteByIds(
-    ids: EntityId[],
-    ops: RepositoryWriteOptions
-  ): Promise<number> {
-    const items = await this.query(ops)
-      .whereIn("id", ids)
-      .delete()
-      .returning("*");
+  async deleteByIds(ids: EntityId[], ops: RepositoryWriteOptions): Promise<number> {
+    const items = await this.query(ops).whereIn("id", ids).delete().returning("*");
     return this.onDeletedItems(items, ops);
   }
 
-  protected async innerDelete(
-    id: EntityId,
-    opt: RepositoryWriteOptions
-  ): Promise<TEntity | null> {
+  protected async innerDelete(id: EntityId, opt: RepositoryWriteOptions): Promise<TEntity | null> {
     const [item] = await this.query(opt).where({ id }).delete().returning("*");
     const entity = item ? this.toEntity(item) : null;
     if (entity) {
@@ -231,10 +192,7 @@ export abstract class DbRepository<
     return entity;
   }
 
-  protected async innerCreate(
-    data: TCreate,
-    opt: RepositoryWriteOptions
-  ): Promise<TEntity> {
+  protected async innerCreate(data: TCreate, opt: RepositoryWriteOptions): Promise<TEntity> {
     // if ("coordinates" in data && Array.isArray(data.coordinates)) {
     //   data.coordinates = this.knex.raw("POINT(?, ?)", data.coordinates);
     // } else if (
@@ -260,10 +218,7 @@ export abstract class DbRepository<
     return entity;
   }
 
-  protected async innerUpdate(
-    data: TUpdate,
-    opt: RepositoryWriteOptions
-  ): Promise<TEntity> {
+  protected async innerUpdate(data: TUpdate, opt: RepositoryWriteOptions): Promise<TEntity> {
     const { id, ...rest } = data;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData = rest as any;
@@ -295,24 +250,16 @@ export abstract class DbRepository<
     // }
 
     const inputData = this.toInputData(updateData);
-    const [item] = await this.query(opt)
-      .where({ id })
-      .update(inputData)
-      .returning("*");
+    const [item] = await this.query(opt).where({ id }).update(inputData).returning("*");
     const entity = item ? this.toEntity(item) : null;
     if (!entity) {
-      throw new NotFoundError(
-        `Entity ${this.tableName} with id ${id} not found!`
-      );
+      throw new NotFoundError(`Entity ${this.tableName} with id ${id} not found!`);
     }
 
     return entity;
   }
 
-  public async findById(
-    id: EntityId,
-    opt?: RepositoryReadOptions
-  ): Promise<TEntity | null> {
+  public async findById(id: EntityId, opt?: RepositoryReadOptions): Promise<TEntity | null> {
     const model = await this.query(opt).where({ id }).first();
 
     return model ? this.toEntity(model) : null;
@@ -324,10 +271,7 @@ export abstract class DbRepository<
     return !!model;
   }
 
-  public async findByIds(
-    ids: EntityId[],
-    opt?: RepositoryReadOptions
-  ): Promise<TEntity[]> {
+  public async findByIds(ids: EntityId[], opt?: RepositoryReadOptions): Promise<TEntity[]> {
     if (ids.length === 0) return [];
 
     const models = await this.query(opt).whereIn("id", ids);
@@ -350,10 +294,7 @@ export abstract class DbRepository<
       .then((rows) => rows.map((it) => it.id));
   }
 
-  protected async onDeletedItems(
-    items: TEntity[],
-    opt: RepositoryWriteOptions
-  ) {
+  protected async onDeletedItems(items: TEntity[], opt: RepositoryWriteOptions) {
     await Promise.all(items.map((item) => this.onDeleted(item, opt)));
     return items.length;
   }

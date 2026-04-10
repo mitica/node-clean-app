@@ -5,11 +5,7 @@ import {
   WorkerTaskStatus,
   WorkerTaskUpdateData,
 } from "../entity/worker-task";
-import {
-  Repository,
-  RepositoryReadOptions,
-  RepositoryWriteOptions,
-} from "./repository";
+import { Repository, RepositoryReadOptions, RepositoryWriteOptions } from "./repository";
 import { EntityId } from "../base";
 
 export interface AcquireTaskParams {
@@ -84,10 +80,7 @@ export interface WorkerTaskRepository extends Repository<
   /**
    * Find all pending tasks, optionally filtered by type.
    */
-  findPending(
-    input?: FindPendingInput,
-    opt?: RepositoryReadOptions
-  ): Promise<WorkerTask[]>;
+  findPending(input?: FindPendingInput, opt?: RepositoryReadOptions): Promise<WorkerTask[]>;
 
   /**
    * Find all running tasks.
@@ -102,26 +95,17 @@ export interface WorkerTaskRepository extends Repository<
   /**
    * Mark a task as completed with optional result.
    */
-  markCompleted(
-    input: MarkCompletedInput,
-    opt: RepositoryWriteOptions
-  ): Promise<WorkerTask>;
+  markCompleted(input: MarkCompletedInput, opt: RepositoryWriteOptions): Promise<WorkerTask>;
 
   /**
    * Mark a task as failed with error details.
    */
-  markFailed(
-    input: MarkFailedInput,
-    opt: RepositoryWriteOptions
-  ): Promise<WorkerTask>;
+  markFailed(input: MarkFailedInput, opt: RepositoryWriteOptions): Promise<WorkerTask>;
 
   /**
    * Release lock on a task (used for graceful shutdown).
    */
-  releaseLock(
-    input: ReleaseLockInput,
-    opt: RepositoryWriteOptions
-  ): Promise<WorkerTask>;
+  releaseLock(input: ReleaseLockInput, opt: RepositoryWriteOptions): Promise<WorkerTask>;
 
   /**
    * Reset stale tasks to pending status.
@@ -131,10 +115,7 @@ export interface WorkerTaskRepository extends Repository<
   /**
    * Count tasks by status.
    */
-  countByStatus(
-    input: CountByStatusInput,
-    opt?: RepositoryReadOptions
-  ): Promise<number>;
+  countByStatus(input: CountByStatusInput, opt?: RepositoryReadOptions): Promise<number>;
 
   /**
    * Get task statistics.
@@ -144,10 +125,7 @@ export interface WorkerTaskRepository extends Repository<
   /**
    * Delete old completed/failed tasks.
    */
-  cleanupOldTasks(
-    input: CleanupOldTasksInput,
-    opt: RepositoryWriteOptions
-  ): Promise<number>;
+  cleanupOldTasks(input: CleanupOldTasksInput, opt: RepositoryWriteOptions): Promise<number>;
 
   /**
    * Find task by idempotency key.

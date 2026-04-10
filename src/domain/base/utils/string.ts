@@ -42,11 +42,7 @@ export const sha256Hash = (data: string, truncate?: number): string => {
 /**
  * Truncates a string to the specified length and adds ellipsis
  */
-export function truncate(
-  str: string,
-  maxLength: number,
-  suffix = "..."
-): string {
+export function truncate(str: string, maxLength: number, suffix = "..."): string {
   if (str.length <= maxLength) {
     return str;
   }
@@ -89,10 +85,7 @@ export function removeExtraWhitespaces(str: string, multiline = false): string {
 /**
  * Safely extracts text with a maximum length
  */
-export function safeText(
-  text: string | null | undefined,
-  maxLength = 500
-): string | null {
+export function safeText(text: string | null | undefined, maxLength = 500): string | null {
   if (!text || typeof text !== "string") {
     return null;
   }
@@ -124,9 +117,7 @@ export function escapeHtml(str: string): string {
 }
 
 export const searchNormString = (str: string): string => {
-  return removeExtraWhitespaces(
-    removePunctuation(removeDiacritics(str.toLowerCase()))
-  );
+  return removeExtraWhitespaces(removePunctuation(removeDiacritics(str.toLowerCase())));
 };
 
 export const removeDiacritics = (str: string): string => {
@@ -174,11 +165,7 @@ export const countWords = (input: string, minLength: number = 1): number => {
 
 export const fixTextCharacters = (input: string, lang: string): string => {
   if (lang.toLowerCase() === "ro") {
-    return input
-      .replace(/ş/g, "ș")
-      .replace(/ţ/g, "ț")
-      .replace(/Ş/g, "Ș")
-      .replace(/Ţ/g, "Ț");
+    return input.replace(/ş/g, "ș").replace(/ţ/g, "ț").replace(/Ş/g, "Ș").replace(/Ţ/g, "Ț");
   }
   return input;
 };

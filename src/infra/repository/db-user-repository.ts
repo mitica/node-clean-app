@@ -1,9 +1,4 @@
-import {
-  User,
-  UserCreateData,
-  UserData,
-  UserUpdateData,
-} from "../../domain/entity";
+import { User, UserCreateData, UserData, UserUpdateData } from "../../domain/entity";
 import { DbRepository } from "./db-repository";
 import { UserRepository } from "../../domain/repository/user-repository";
 import { IQueryBuilderFactory } from "./query/query-builder-factory";
@@ -20,10 +15,7 @@ export class UserDbRepository
     });
   }
 
-  async getByEmail(
-    email: string,
-    opt?: RepositoryReadOptions
-  ): Promise<User | null> {
+  async getByEmail(email: string, opt?: RepositoryReadOptions): Promise<User | null> {
     const item = await this.query(opt).where({ email }).first();
     return item ? this.toEntity(item) : null;
   }

@@ -18,21 +18,14 @@ export interface RetryTaskInput {
 /**
  * Retry a failed worker task.
  */
-export class RetryTaskUseCase extends BaseUseCase<
-  RetryTaskInput,
-  WorkerTask,
-  AppContext
-> {
+export class RetryTaskUseCase extends BaseUseCase<RetryTaskInput, WorkerTask, AppContext> {
   protected async innerExecute(
     input: Readonly<RetryTaskInput>,
     ctx: AppContext
   ): Promise<WorkerTask> {
     const task = await ctx.repo.workerTask.checkById(input.taskId);
 
-    if (
-      task.status !== WorkerTaskStatus.FAILED &&
-      task.status !== WorkerTaskStatus.CANCELLED
-    ) {
+    if (task.status !== WorkerTaskStatus.FAILED && task.status !== WorkerTaskStatus.CANCELLED) {
       throw new Error(
         `Cannot retry task in status: ${task.status}. Only failed or cancelled tasks can be retried.`
       );

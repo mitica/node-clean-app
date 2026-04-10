@@ -118,9 +118,7 @@ export class HttpError extends Error {
  *     return c.json({ success: true, data: user });
  *   }));
  */
-export function asyncHandler<T extends Context<HonoEnv>>(
-  handler: (c: T) => Promise<Response>
-) {
+export function asyncHandler<T extends Context<HonoEnv>>(handler: (c: T) => Promise<Response>) {
   return async (c: T): Promise<Response> => {
     return await handler(c);
   };

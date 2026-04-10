@@ -12,11 +12,7 @@ import {
 } from "./base";
 import { DomainContext } from "./context";
 
-export interface UseCaseEvents<
-  TInput,
-  TOutput,
-  TContext extends DomainContext = DomainContext,
-> {
+export interface UseCaseEvents<TInput, TOutput, TContext extends DomainContext = DomainContext> {
   executed: { input: TInput; output: TOutput; ctx: TContext };
   executing: { input: TInput; ctx: TContext };
 }
@@ -70,9 +66,7 @@ export abstract class BaseUseCase<
   }
 
   protected noAccess(info?: string) {
-    throw new ForbiddenError(
-      `No access to ${this.constructor.name}.${info ? ` (${info})` : ""}`
-    );
+    throw new ForbiddenError(`No access to ${this.constructor.name}.${info ? ` (${info})` : ""}`);
   }
 
   protected checkCurrentUser<TUser extends EntityData>(user?: TUser) {
@@ -93,12 +87,7 @@ export abstract class BaseUseCase<
    */
   private setInputValidator(inputValidator?: Validator<TInput>) {
     const schema = (this.constructor as unknown as StaticUseCase).jsonSchema;
-    if (schema)
-      inputValidator = new JsonValidator(
-        schema,
-        {},
-        BaseErrorCode.INVALID_INPUT
-      );
+    if (schema) inputValidator = new JsonValidator(schema, {}, BaseErrorCode.INVALID_INPUT);
 
     if (inputValidator) this.inputValidators.push(inputValidator);
   }
@@ -142,10 +131,7 @@ export abstract class BaseUseCase<
     return output;
   }
 
-  protected abstract innerExecute(
-    input: TInput,
-    ctx: TContext
-  ): Promise<TOutput>;
+  protected abstract innerExecute(input: TInput, ctx: TContext): Promise<TOutput>;
 
   /**
    * Fire executed event.
@@ -163,14 +149,8 @@ export abstract class BaseUseCase<
     return this.emit("executing", { input, ctx });
   }
 
-  protected async onError(
-    _input: TInput,
-    _context: TContext,
-    retryCount: number,
-    error: Error
-  ) {
-    if (!this.options.retryCount || retryCount >= this.options.retryCount)
-      throw error;
+  protected async onError(_input: TInput, _context: TContext, retryCount: number, error: Error) {
+    if (!this.options.retryCount || retryCount >= this.options.retryCount) throw error;
 
     // logger.debug(
     //   `${this.constructor.name} retrying (${retryCount}) due to error: ${error.message}`

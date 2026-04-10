@@ -18,11 +18,7 @@ export type UserLoginOutput = {
 /**
  * Login a user and return JWT tokens.
  */
-export class UserLoginUseCase extends BaseUseCase<
-  UserLoginInput,
-  UserLoginOutput,
-  AppContext
-> {
+export class UserLoginUseCase extends BaseUseCase<UserLoginInput, UserLoginOutput, AppContext> {
   protected async innerExecute(
     input: Readonly<UserLoginInput>,
     ctx: AppContext
@@ -38,17 +34,13 @@ export class UserLoginUseCase extends BaseUseCase<
     const updatedUser = await ctx.repo.user.update(
       {
         id: user.id,
-        lastLoginAt: new Date().toISOString()
+        lastLoginAt: new Date().toISOString(),
       },
       { ctx }
     );
 
     // Generate JWT tokens
-    const tokens = generateTokenPair(
-      updatedUser.id,
-      updatedUser.email,
-      updatedUser.role
-    );
+    const tokens = generateTokenPair(updatedUser.id, updatedUser.email, updatedUser.role);
 
     return {
       user: updatedUser,
@@ -60,9 +52,9 @@ export class UserLoginUseCase extends BaseUseCase<
     type: "object",
     properties: {
       email: { type: "string", format: "email" },
-      password: { type: "string", minLength: 6 }
+      password: { type: "string", minLength: 6 },
     },
     required: ["email", "password"],
-    additionalProperties: false
+    additionalProperties: false,
   };
 }

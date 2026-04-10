@@ -11,11 +11,7 @@ export interface CancelTaskInput {
 /**
  * Cancel a pending worker task.
  */
-export class CancelTaskUseCase extends BaseUseCase<
-  CancelTaskInput,
-  WorkerTask,
-  AppContext
-> {
+export class CancelTaskUseCase extends BaseUseCase<CancelTaskInput, WorkerTask, AppContext> {
   protected async innerExecute(
     input: Readonly<CancelTaskInput>,
     ctx: AppContext

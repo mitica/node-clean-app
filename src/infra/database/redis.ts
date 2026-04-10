@@ -14,16 +14,14 @@ export const redisInstance = (redis?: Redis): Redis => {
 
 export const publisherInstance = (redis?: Redis): Redis => {
   if (redis) publisherRedisInstance = redis;
-  if (!publisherRedisInstance)
-    publisherRedisInstance = new RedisClass(config.redis.url);
+  if (!publisherRedisInstance) publisherRedisInstance = new RedisClass(config.redis.url);
 
   return publisherRedisInstance;
 };
 
 export const subscriberInstance = (redis?: Redis): Redis => {
   if (redis) subscriberRedisInstance = redis;
-  if (!subscriberRedisInstance)
-    subscriberRedisInstance = new RedisClass(config.redis.url);
+  if (!subscriberRedisInstance) subscriberRedisInstance = new RedisClass(config.redis.url);
 
   return subscriberRedisInstance;
 };

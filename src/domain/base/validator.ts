@@ -3,15 +3,8 @@ import addFormats from "ajv-formats";
 import { JSONSchema } from "./json-schema";
 import { BaseErrorCode, ValidationError } from "./errors";
 
-export interface Validator<
-  TInput,
-  TOutput = TInput,
-  TContext = Record<string, unknown>
-> {
-  validate(
-    data: Readonly<TInput>,
-    context?: Readonly<TContext>
-  ): Promise<TOutput>;
+export interface Validator<TInput, TOutput = TInput, TContext = Record<string, unknown>> {
+  validate(data: Readonly<TInput>, context?: Readonly<TContext>): Promise<TOutput>;
 }
 
 export class JsonValidator<TInput> implements Validator<TInput, TInput> {
@@ -40,8 +33,7 @@ export class JsonValidator<TInput> implements Validator<TInput, TInput> {
   public async validate(input: TInput) {
     if (!this._validateFunction(this.toJson(input))) {
       throw new ValidationError(
-        this._ajv.errorsText(this._validateFunction.errors) ||
-          "Validation error",
+        this._ajv.errorsText(this._validateFunction.errors) || "Validation error",
         {
           data: { errors: this._validateFunction.errors, input },
           errorCode: this.defaultErrorCode,

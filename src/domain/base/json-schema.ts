@@ -6,5 +6,4 @@ export type JSONSchema = JSONSchema7 & {
 
 export type RequiredJSONSchema = JSONSchema &
   Required<Pick<JSONSchema, "type" | "properties" | "required">>;
-export type RequiredArrayJSONSchema = JSONSchema &
-  Required<Pick<JSONSchema, "type" | "items">>;
+export type RequiredArrayJSONSchema = JSONSchema & Required<Pick<JSONSchema, "type" | "items">>;

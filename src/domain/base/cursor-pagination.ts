@@ -83,20 +83,15 @@ export async function createCursorPage<T>(
 
   if (totalCountNumber) items = await getItems(params);
   else {
-    const [count, list] = await Promise.all([
-      getTotalCount(totalCount),
-      getItems(params),
-    ]);
+    const [count, list] = await Promise.all([getTotalCount(totalCount), getItems(params)]);
     totalCountNumber = count;
     items = list;
   }
 
-  const hasNextPage =
-    params.first === items.length && typeof params.first === "number";
+  const hasNextPage = params.first === items.length && typeof params.first === "number";
   let endCursor = "";
 
-  const itemCursor =
-    info?.itemCursor ?? defaultItemCursor(totalCountNumber, params.after);
+  const itemCursor = info?.itemCursor ?? defaultItemCursor(totalCountNumber, params.after);
 
   const edges = items.map((node, index) => {
     let cursorValue: string | number;
@@ -104,9 +99,7 @@ export async function createCursorPage<T>(
     else cursorValue = node[itemCursor] as unknown as string;
 
     if (!hasValue(cursorValue))
-      throw new TypeError(
-        `Invalid cursor value for field '${itemCursor.toString()}'`
-      );
+      throw new TypeError(`Invalid cursor value for field '${itemCursor.toString()}'`);
 
     endCursor = String(cursorValue);
     return { node, cursor: endCursor };

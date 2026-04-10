@@ -49,9 +49,7 @@ export function formatDuration(seconds: number): string {
   const secs = Math.floor(seconds % 60);
 
   if (hours > 0) {
-    return `${hours}:${minutes.toString().padStart(2, "0")}:${secs
-      .toString()
-      .padStart(2, "0")}`;
+    return `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   }
 
   return `${minutes}:${secs.toString().padStart(2, "0")}`;
@@ -84,15 +82,12 @@ export function dateAdd(
   date: Date = new Date()
 ): Date {
   const newDate = new Date(date);
-  if (interval.years)
-    newDate.setFullYear(newDate.getFullYear() + interval.years);
+  if (interval.years) newDate.setFullYear(newDate.getFullYear() + interval.years);
   if (interval.months) newDate.setMonth(newDate.getMonth() + interval.months);
   if (interval.days) newDate.setDate(newDate.getDate() + interval.days);
   if (interval.hours) newDate.setHours(newDate.getHours() + interval.hours);
-  if (interval.minutes)
-    newDate.setMinutes(newDate.getMinutes() + interval.minutes);
-  if (interval.seconds)
-    newDate.setSeconds(newDate.getSeconds() + interval.seconds);
+  if (interval.minutes) newDate.setMinutes(newDate.getMinutes() + interval.minutes);
+  if (interval.seconds) newDate.setSeconds(newDate.getSeconds() + interval.seconds);
   return newDate;
 }
 
@@ -104,10 +99,7 @@ export function dateAdd(
  * @param date
  * @returns
  */
-export const dateToInt = (
-  granularity: DateGranularity | string,
-  date: Date
-) => {
+export const dateToInt = (granularity: DateGranularity | string, date: Date) => {
   const year = date.getUTCFullYear();
   const month = date.getUTCMonth() + 1; // Months are zero-based
   const day = date.getUTCDate();
@@ -143,18 +135,5 @@ export const isLeapYear = (year: number): boolean => {
   return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
 };
 export const daysInMonth = (year: number, month: number): number => {
-  return [
-    31,
-    isLeapYear(year) ? 29 : 28,
-    31,
-    30,
-    31,
-    30,
-    31,
-    31,
-    30,
-    31,
-    30,
-    31,
-  ][month - 1];
+  return [31, isLeapYear(year) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1];
 };

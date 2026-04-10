@@ -3,10 +3,7 @@ import { RequiredJSONSchema } from "./json-schema";
 import { dataIsEqual, omitFieldsByValue, toSnakeCase, uniq } from "./utils";
 import { Constructor, EntityId } from "./types";
 
-export type EntityCreateData<T extends EntityData> = Omit<
-  T,
-  keyof EntityData
-> & {
+export type EntityCreateData<T extends EntityData> = Omit<T, keyof EntityData> & {
   id?: EntityId;
 };
 
@@ -25,9 +22,7 @@ export interface EntityData {
   updatedAt: string;
 }
 
-export interface Entity<
-  TData extends EntityData = EntityData,
-> extends EntityData {
+export interface Entity<TData extends EntityData = EntityData> extends EntityData {
   /**
    * Get entity data.
    */
@@ -58,9 +53,7 @@ export interface Entity<
  * Base entity class.
  * All entities should extend BaseEntity.
  */
-export class BaseEntity<
-  TData extends EntityData = EntityData,
-> implements Entity<TData> {
+export class BaseEntity<TData extends EntityData = EntityData> implements Entity<TData> {
   protected readonly _data: TData;
 
   public constructor(data: TData) {
@@ -153,15 +146,10 @@ export class BaseEntity<
     } = { compareOnlyBFields: true }
   ): boolean {
     const a = this.getData();
-    const fieldsToOmit = this.fieldsToOmitOnCompare().concat(
-      options.omit || []
-    );
+    const fieldsToOmit = this.fieldsToOmitOnCompare().concat(options.omit || []);
     const keys = uniq(Object.keys(a).concat(Object.keys(b)));
 
-    const fields = R.reject<string, string[]>(
-      (it) => fieldsToOmit.includes(it),
-      keys
-    );
+    const fields = R.reject<string, string[]>((it) => fieldsToOmit.includes(it), keys);
 
     let aData = omitFieldsByValue(R.pick(fields as never, a), [undefined]);
 
@@ -178,10 +166,10 @@ export class BaseEntity<
   }
 }
 
-export interface EntityConstructor<
-  D extends EntityData,
-  E extends Entity<D>,
-> extends Constructor<E, D> {
+export interface EntityConstructor<D extends EntityData, E extends Entity<D>> extends Constructor<
+  E,
+  D
+> {
   readonly jsonSchema: RequiredJSONSchema;
   tableName(): string;
 }

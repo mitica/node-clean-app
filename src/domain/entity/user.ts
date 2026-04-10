@@ -3,12 +3,12 @@ import {
   EntityCreateData,
   EntityData,
   EntityUpdateData,
-  RequiredJSONSchema
+  RequiredJSONSchema,
 } from "../base";
 
 export enum UserRole {
   ADMIN = "ADMIN",
-  USER = "USER"
+  USER = "USER",
 }
 
 export interface UserData extends EntityData {
@@ -52,7 +52,7 @@ export class User extends BaseEntity<UserData> implements UserData {
       name: { type: "string", maxLength: 255 },
       role: { type: "string", enum: Object.values(UserRole) },
       isEmailVerified: { type: "boolean" },
-      lastLoginAt: { type: "string", format: "date-time" }
+      lastLoginAt: { type: "string", format: "date-time" },
     },
     required: [
       ...super.jsonSchema.required,
@@ -60,8 +60,8 @@ export class User extends BaseEntity<UserData> implements UserData {
       "passwordHash",
       "name",
       "role",
-      "isEmailVerified"
+      "isEmailVerified",
     ],
-    additionalProperties: false
+    additionalProperties: false,
   };
 }

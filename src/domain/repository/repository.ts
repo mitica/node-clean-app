@@ -18,10 +18,7 @@ import {
   CursorPageParams,
 } from "../base";
 
-export interface BaseFilterParams<
-  FEType extends string = string,
-  SEType extends string = string,
-> {
+export interface BaseFilterParams<FEType extends string = string, SEType extends string = string> {
   filter?: FilterField<FEType>[];
   select?: SEType[];
   user?: UserFilterParams;
@@ -44,10 +41,7 @@ export interface StatsParams<
   sort?: SortBy<number>[];
 }
 
-export interface CursorStatsParams<
-  FEType extends string = string,
-  SEType extends string = string,
->
+export interface CursorStatsParams<FEType extends string = string, SEType extends string = string>
   extends StatsParams<FEType, SEType>, CursorPageParams {}
 
 export type StatsPropValue = string | number;
@@ -69,15 +63,12 @@ export interface UserFilterParams {
   visitorId?: string;
 }
 
-export interface FindBaseParams<
-  T extends string = string,
-> extends BaseFilterParams<T> {
+export interface FindBaseParams<T extends string = string> extends BaseFilterParams<T> {
   sort?: SortBy<T | number>[];
   user?: UserFilterParams;
 }
 
-export type FindParams<T extends FindBaseParams = FindBaseParams> = T &
-  PaginationParams;
+export type FindParams<T extends FindBaseParams = FindBaseParams> = T & PaginationParams;
 
 export interface RepositoryEvents<
   TData extends EntityData,
@@ -94,9 +85,7 @@ export interface RepositoryEvents<
   preEntityDelete: EntityId;
 }
 
-export interface RepositoryReadOptions<
-  TCtx extends DomainContext = DomainContext,
-> {
+export interface RepositoryReadOptions<TCtx extends DomainContext = DomainContext> {
   trx?: unknown;
   cache?: boolean;
   ctx?: TCtx;
@@ -114,36 +103,20 @@ export interface Repository<
   TCreate extends EntityCreateData<EntityData> = EntityCreateData<TData>,
   TUpdate extends EntityUpdateData<TData> = EntityUpdateData<TData>,
   TFindParams extends FindBaseParams = FindBaseParams,
-  TEvents extends RepositoryEvents<TData, TEntity> = RepositoryEvents<
-    TData,
-    TEntity,
-    TUpdate
-  >,
+  TEvents extends RepositoryEvents<TData, TEntity> = RepositoryEvents<TData, TEntity, TUpdate>,
 > extends TypedEventEmitter<TEvents> {
   statsList(params: StatsParams): Promise<StatsData[]>;
   statsCount(params: BaseStatsParams): Promise<number>;
   statsCursor(params: CursorStatsParams): Promise<CursorPage<StatsData>>;
-  find(
-    params: FindParams<TFindParams>,
-    opt?: RepositoryReadOptions
-  ): Promise<TEntity[]>;
-  first(
-    params: TFindParams,
-    opt?: RepositoryReadOptions
-  ): Promise<TEntity | null>;
+  find(params: FindParams<TFindParams>, opt?: RepositoryReadOptions): Promise<TEntity[]>;
+  first(params: TFindParams, opt?: RepositoryReadOptions): Promise<TEntity | null>;
   count(params: TFindParams, opt?: RepositoryReadOptions): Promise<number>;
-  ids(
-    params: FindParams<TFindParams>,
-    opt?: RepositoryReadOptions
-  ): Promise<EntityId[]>;
+  ids(params: FindParams<TFindParams>, opt?: RepositoryReadOptions): Promise<EntityId[]>;
   cursor(
     params: FindParams<TFindParams>,
     opt?: RepositoryReadOptions
   ): Promise<CursorPage<TEntity>>;
-  generator(
-    params: FindParams<TFindParams>,
-    opt?: RepositoryReadOptions
-  ): AsyncGenerator<TEntity>;
+  generator(params: FindParams<TFindParams>, opt?: RepositoryReadOptions): AsyncGenerator<TEntity>;
   generatorList(
     params: FindParams<TFindParams>,
     opt?: RepositoryReadOptions
@@ -152,10 +125,7 @@ export interface Repository<
    * Delete an entity by id.
    * @param id Entity id to be deleted
    */
-  deleteById(
-    id: EntityId,
-    opt: RepositoryWriteOptions
-  ): Promise<TEntity | null>;
+  deleteById(id: EntityId, opt: RepositoryWriteOptions): Promise<TEntity | null>;
 
   /**
    * Delete an entity by ids.
@@ -193,10 +163,7 @@ export interface Repository<
    */
   findOrCreate(data: TCreate, opt: RepositoryWriteOptions): Promise<TEntity>;
 
-  findOrCreateMany(
-    data: TCreate[],
-    opt: RepositoryWriteOptions
-  ): Promise<TEntity[]>;
+  findOrCreateMany(data: TCreate[], opt: RepositoryWriteOptions): Promise<TEntity[]>;
 
   /**
    * Update an existing entity.
@@ -214,10 +181,7 @@ export interface Repository<
    * Find unique entity.
    * @param data Entity data
    */
-  findUnique(
-    data: TCreate,
-    opt?: RepositoryReadOptions
-  ): Promise<TEntity | null>;
+  findUnique(data: TCreate, opt?: RepositoryReadOptions): Promise<TEntity | null>;
 
   /**
    * Get an entity by id.
@@ -274,15 +238,8 @@ export abstract class BaseRepository<
   TCreate extends EntityCreateData<EntityData> = EntityCreateData<TData>,
   TUpdate extends EntityUpdateData<TData> = EntityUpdateData<TData>,
   TFindParams extends FindBaseParams = FindBaseParams,
-  Events extends RepositoryEvents<TData, TEntity> = RepositoryEvents<
-    TData,
-    TEntity,
-    TUpdate
-  >,
-  TOptions extends RepositoryOptions<TCreate, TUpdate> = RepositoryOptions<
-    TCreate,
-    TUpdate
-  >,
+  Events extends RepositoryEvents<TData, TEntity> = RepositoryEvents<TData, TEntity, TUpdate>,
+  TOptions extends RepositoryOptions<TCreate, TUpdate> = RepositoryOptions<TCreate, TUpdate>,
 >
   extends TypedEventEmitter<Events>
   implements Repository<TData, TEntity, TCreate, TUpdate, TFindParams, Events>
@@ -297,26 +254,11 @@ export abstract class BaseRepository<
     this.options = { ...options };
   }
 
-  abstract find(
-    params: FindParams<TFindParams>,
-    opt?: RepositoryReadOptions
-  ): Promise<TEntity[]>;
-  abstract count(
-    params: TFindParams,
-    opt?: RepositoryReadOptions
-  ): Promise<number>;
-  abstract ids(
-    params: FindParams<TFindParams>,
-    opt?: RepositoryReadOptions
-  ): Promise<EntityId[]>;
-  abstract statsList(
-    params: StatsParams,
-    opt?: RepositoryReadOptions
-  ): Promise<StatsData[]>;
-  abstract statsCount(
-    params: BaseStatsParams,
-    opt?: RepositoryReadOptions
-  ): Promise<number>;
+  abstract find(params: FindParams<TFindParams>, opt?: RepositoryReadOptions): Promise<TEntity[]>;
+  abstract count(params: TFindParams, opt?: RepositoryReadOptions): Promise<number>;
+  abstract ids(params: FindParams<TFindParams>, opt?: RepositoryReadOptions): Promise<EntityId[]>;
+  abstract statsList(params: StatsParams, opt?: RepositoryReadOptions): Promise<StatsData[]>;
+  abstract statsCount(params: BaseStatsParams, opt?: RepositoryReadOptions): Promise<number>;
 
   statsCursor(
     params: CursorStatsParams,
@@ -347,10 +289,7 @@ export abstract class BaseRepository<
     }
   }
 
-  async *generatorList(
-    params: FindParams<TFindParams>,
-    opt?: RepositoryReadOptions
-  ) {
+  async *generatorList(params: FindParams<TFindParams>, opt?: RepositoryReadOptions) {
     while (true) {
       const { edges, pageInfo } = await this.cursor(params, opt);
       yield edges.map((edge) => edge.node as TEntity);
@@ -372,18 +311,10 @@ export abstract class BaseRepository<
     );
   }
 
-  abstract existsById(
-    id: EntityId,
-    opt?: RepositoryReadOptions
-  ): Promise<boolean>;
+  abstract existsById(id: EntityId, opt?: RepositoryReadOptions): Promise<boolean>;
 
-  abstract transaction<T>(
-    scope: (trx: unknown) => Promise<T> | void
-  ): Promise<T>;
-  abstract deleteByIds(
-    ids: EntityId[],
-    opt: RepositoryReadOptions
-  ): Promise<number>;
+  abstract transaction<T>(scope: (trx: unknown) => Promise<T> | void): Promise<T>;
+  abstract deleteByIds(ids: EntityId[], opt: RepositoryReadOptions): Promise<number>;
 
   getEntityName(): string {
     return this.entityBuilder.name;
@@ -406,8 +337,7 @@ export abstract class BaseRepository<
       ...opt,
       cache: false,
     });
-    if (!entity)
-      throw new NotFoundError(`${this.getEntityName()} ${id} not found!`);
+    if (!entity) throw new NotFoundError(`${this.getEntityName()} ${id} not found!`);
     return entity;
   }
 
@@ -453,10 +383,7 @@ export abstract class BaseRepository<
     return data;
   }
 
-  public async create(
-    data: TCreate,
-    opt: RepositoryWriteOptions
-  ): Promise<TEntity> {
+  public async create(data: TCreate, opt: RepositoryWriteOptions): Promise<TEntity> {
     data = await this.preCreate(data);
     const entity = await this.innerCreate(data, opt);
 
@@ -465,17 +392,11 @@ export abstract class BaseRepository<
     return entity;
   }
 
-  public async createMany(
-    data: TCreate[],
-    opt: RepositoryWriteOptions
-  ): Promise<TEntity[]> {
+  public async createMany(data: TCreate[], opt: RepositoryWriteOptions): Promise<TEntity[]> {
     return Promise.all(data.map((item) => this.create(item, opt)));
   }
 
-  protected abstract innerCreate(
-    data: TCreate,
-    opt?: RepositoryWriteOptions
-  ): Promise<TEntity>;
+  protected abstract innerCreate(data: TCreate, opt?: RepositoryWriteOptions): Promise<TEntity>;
 
   /**
    * Pre update operations: validation, etc.
@@ -489,10 +410,7 @@ export abstract class BaseRepository<
     return data;
   }
 
-  public async update(
-    data: TUpdate,
-    opt: RepositoryWriteOptions
-  ): Promise<TEntity> {
+  public async update(data: TUpdate, opt: RepositoryWriteOptions): Promise<TEntity> {
     data = await this.preUpdate(data);
     const entity = await this.innerUpdate(data, opt);
 
@@ -501,38 +419,20 @@ export abstract class BaseRepository<
     return entity;
   }
 
-  protected abstract innerUpdate(
-    data: TUpdate,
-    opt: RepositoryWriteOptions
-  ): Promise<TEntity>;
-  public abstract findById(
-    id: EntityId,
-    opt?: RepositoryReadOptions
-  ): Promise<TEntity | null>;
-  public abstract findByIds(
-    ids: EntityId[],
-    opt?: RepositoryReadOptions
-  ): Promise<TEntity[]>;
+  protected abstract innerUpdate(data: TUpdate, opt: RepositoryWriteOptions): Promise<TEntity>;
+  public abstract findById(id: EntityId, opt?: RepositoryReadOptions): Promise<TEntity | null>;
+  public abstract findByIds(ids: EntityId[], opt?: RepositoryReadOptions): Promise<TEntity[]>;
 
-  public async findUnique(
-    data: TCreate,
-    opt?: RepositoryReadOptions
-  ): Promise<TEntity | null> {
+  public async findUnique(data: TCreate, opt?: RepositoryReadOptions): Promise<TEntity | null> {
     return data.id ? this.findById(data.id, { ...opt, cache: false }) : null;
   }
 
-  public async findOrCreate(
-    data: TCreate,
-    opt: RepositoryWriteOptions
-  ): Promise<TEntity> {
+  public async findOrCreate(data: TCreate, opt: RepositoryWriteOptions): Promise<TEntity> {
     const existingEntity = await this.findUnique(data, opt);
     return existingEntity ? existingEntity : await this.create(data, opt);
   }
 
-  async findOrCreateMany(
-    data: TCreate[],
-    opt: RepositoryWriteOptions
-  ): Promise<TEntity[]> {
+  async findOrCreateMany(data: TCreate[], opt: RepositoryWriteOptions): Promise<TEntity[]> {
     const output: TEntity[] = [];
     for (const item of data) {
       output.push(await this.findOrCreate(item, opt));
@@ -540,10 +440,7 @@ export abstract class BaseRepository<
     return output;
   }
 
-  public async createOrUpdate(
-    data: TCreate,
-    opt: RepositoryWriteOptions
-  ): Promise<TEntity> {
+  public async createOrUpdate(data: TCreate, opt: RepositoryWriteOptions): Promise<TEntity> {
     const exists = await this.findUnique(data);
     if (exists) {
       return exists.dataIsEqual(data)
@@ -578,11 +475,7 @@ export abstract class BaseRepository<
    * Fire entityUpdated event.
    * @param entity Updated entity
    */
-  protected async onUpdated(
-    entity: TEntity,
-    data: TUpdate,
-    opt: RepositoryWriteOptions
-  ) {
+  protected async onUpdated(entity: TEntity, data: TUpdate, opt: RepositoryWriteOptions) {
     return this.emit("entityUpdated", { entity, data, opt });
   }
 

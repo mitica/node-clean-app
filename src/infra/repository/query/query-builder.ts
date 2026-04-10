@@ -33,9 +33,7 @@ export type ApplyFilterInput = {
   findParams: FindBaseParams;
 };
 
-export interface IQueryBuilder<
-  TFindParams extends FindBaseParams = FindBaseParams,
-> {
+export interface IQueryBuilder<TFindParams extends FindBaseParams = FindBaseParams> {
   /**
    * Apply all find params to the query
    * @param query
