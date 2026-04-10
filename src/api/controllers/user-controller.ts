@@ -25,7 +25,7 @@ export class UserController {
         const id = parseInt(c.req.param("id") || "", 10);
         const item = await ctx.repo.user.findById(id);
 
-        return c.json({ success: true, data: item });
+        return c.json({ success: true, data: item?.getData() || null });
       })
     );
   }

@@ -97,6 +97,14 @@ export const omitNUEFields = <T extends object>(obj: T): T =>
 
 export const uniq = <T>(arr: T[]) => [...new Set(arr)];
 
+export const pick = <T extends object, K extends keyof T>(keys: K[], obj: T): Pick<T, K> => {
+  const result = {} as Pick<T, K>;
+  for (const key of keys) {
+    if (key in obj) result[key] = obj[key];
+  }
+  return result;
+};
+
 /**
  * Checks if value is not one of: undefined, null, or empty string
  * @param value any value

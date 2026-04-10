@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { HonoEnv } from "../types";
 import { asyncHandler } from "../middleware/error-handler";
+import { UserRegisterInput } from "../../app/user";
 
 /**
  * Auth Controller - Handles authentication endpoints.
@@ -71,6 +72,33 @@ export class AuthController {
             tokens: result.tokens,
           },
         });
+      })
+    );
+
+    // Register endpoint
+    this.app.post(
+      "/register",
+      asyncHandler(async (c) => {
+        const ctx = c.get("requestContext");
+        const body = await c.req.json<UserRegisterInput>();
+
+        const result = await ctx.usecase.register.execute(body, ctx);
+
+        return c.json(
+          {
+            success: true,
+            data: {
+              user: {
+                id: result.user.id,
+                email: result.user.email,
+                name: result.user.name,
+                role: result.user.role,
+              },
+              tokens: result.tokens,
+            },
+          },
+          201
+        );
       })
     );
 

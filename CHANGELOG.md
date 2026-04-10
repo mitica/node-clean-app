@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Vitest testing framework with sample tests for domain utilities
 - ESLint with flat config and typescript-eslint for type-aware linting
+- User registration use case (`UserRegisterUseCase`) with email uniqueness check and JWT token generation
+- `POST /register` endpoint in auth controller
+- Generic `pick` utility in `domain/base/utils`
+- Copilot instruction file for use case creation conventions (`.github/instructions/usecase.instructions.md`)
 - Prettier with project-level config and VS Code integration
 - `.prettierignore` for excluding build output
 - `yarn test`, `yarn test:watch` scripts
@@ -24,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated Dockerfile base image from `node:21.7.2-alpine` to `node:22-alpine`
 - Excluded test files (`*.test.ts`) from TypeScript build output
 - Updated `.vscode/settings.json` with Prettier as default formatter and format-on-save
+- Docker Compose PostgreSQL volume mount updated from `/var/lib/postgresql/data` to `/var/lib/postgresql` for PostgreSQL 18+ compatibility
 
 ### Fixed
 
@@ -34,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `{ cause }` to re-thrown errors in auth middleware
 - Fixed unused variable warnings across codebase
 - Updated stale eslint-disable comments
+- ESLint parsing errors for test files excluded from `tsconfig.json` by adding `**/*.test.ts` to ESLint ignores
 
 ### Removed
 
@@ -94,11 +100,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Bump hono from 4.9.7 to 4.10.3
 
-## [Unreleased]
-
-- Future improvements and features will be documented here
-
 [0.4.0]: https://github.com/mitica/node-clean-app/compare/v0.2.0...v0.4.0
 [0.2.0]: https://github.com/mitica/node-clean-app/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/mitica/node-clean-app/releases/tag/v0.1.0
-[Unreleased]: https://github.com/mitica/node-clean-app/compare/v0.4.0...HEAD
