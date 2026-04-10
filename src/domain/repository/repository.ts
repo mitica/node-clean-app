@@ -322,7 +322,7 @@ export abstract class BaseRepository<
     params: CursorStatsParams,
     opt?: RepositoryReadOptions
   ): Promise<CursorPage<StatsData>> {
-    const { after, first, offset, ...countParams } = params;
+    const { after, first, offset: _offset, ...countParams } = params;
     return createCursorPage<StatsData>(
       { after, first },
       () => this.statsCount(countParams, opt),

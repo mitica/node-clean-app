@@ -67,9 +67,9 @@ export function capitalize(str: string): string {
 export function slugify(str: string): string {
   return atonic(searchNormString(str.trim().toLowerCase()))
     .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9\-]/g, "") // remove invalid chars
-    .replace(/\-+/g, "-") // collapse dashes
-    .replace(/^\-+|\-+$/g, ""); // trim dashes from start/end
+    .replace(/[^a-z0-9-]/g, "") // remove invalid chars
+    .replace(/-+/g, "-") // collapse dashes
+    .replace(/^-+|-+$/g, ""); // trim dashes from start/end
 }
 
 /**

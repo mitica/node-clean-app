@@ -25,6 +25,8 @@
     "reset-es": "node dist/infra/database/scripts/reset-es.js",
     "test": "vitest run",
     "test:watch": "vitest",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
     "tsc": "tsc",
     "tscw": "tsc -w",
     "preversion": "npm run tsc",
@@ -48,6 +50,7 @@
   },
   "homepage": "https://github.com/mitica/node-clean-app#readme",
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/bcryptjs": "^3.0.0",
     "@types/camelize": "^1.0.1",
     "@types/json-schema": "^7.0.15",
@@ -59,8 +62,10 @@
     "@types/ramda": "^0.31.1",
     "@types/uuid": "^11.0.0",
     "cpx": "^1.5.0",
+    "eslint": "^10.2.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2",
+    "typescript-eslint": "^8.58.1",
     "vitest": "^4.1.4"
   },
   "dependencies": {

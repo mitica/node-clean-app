@@ -79,7 +79,7 @@ export async function createCursorPage<T>(
       pageInfo: { hasNextPage: false },
     };
 
-  let items: T[] = [];
+  let items: T[];
 
   if (totalCountNumber) items = await getItems(params);
   else {

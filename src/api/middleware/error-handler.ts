@@ -122,11 +122,6 @@ export function asyncHandler<T extends Context<HonoEnv>>(
   handler: (c: T) => Promise<Response>
 ) {
   return async (c: T): Promise<Response> => {
-    try {
-      return await handler(c);
-    } catch (error) {
-      // Forward to Hono's error handler
-      throw error;
-    }
+    return await handler(c);
   };
 }

@@ -1,10 +1,9 @@
 import { type Knex } from "knex";
 import { AppContext } from "../config";
 
-// var redisInstance: Redis;
-var knexInstance: Knex;
+// eslint-disable-next-line no-unassigned-vars
+let knexInstance: Knex;
 
-// globalThis.redisInstance = redisInstance;
 globalThis.knexInstance = knexInstance;
 
 // Extend the Knex.QueryBuilder interface
@@ -16,6 +15,7 @@ declare module "knex" {
 
 declare global {
   namespace NodeJS {
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     interface Global {
       // redisInstance?: Redis;
     }

@@ -116,9 +116,9 @@ async function handleJwtAuth(
     const error = new UnauthorizedError(result.message);
     // Add error code for token expiration
     if (result.error === "expired") {
-      (error as any).code = "TOKEN_EXPIRED";
+      (error as unknown as Record<string, unknown>).code = "TOKEN_EXPIRED";
     } else {
-      (error as any).code = "INVALID_TOKEN";
+      (error as unknown as Record<string, unknown>).code = "INVALID_TOKEN";
     }
     throw error;
   }
@@ -135,7 +135,7 @@ async function handleJwtAuth(
 
     if (!user) {
       const error = new UnauthorizedError("User not found");
-      (error as any).code = "USER_NOT_FOUND";
+      (error as unknown as Record<string, unknown>).code = "USER_NOT_FOUND";
       throw error;
     }
 
@@ -157,6 +157,6 @@ async function handleJwtAuth(
     }
     // Wrap other errors
     console.error("Failed to load user from token:", error);
-    throw new Error("Failed to authenticate user");
+    throw new Error("Failed to authenticate user", { cause: error });
   }
 }

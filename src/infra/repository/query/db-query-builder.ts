@@ -139,41 +139,47 @@ export class DbQueryBuilder<
     });
 
     if (value === null) {
-      olp === SqlLogicalOperator.OR
-        ? query.orWhereRaw(
-            `${name} ${filter.op === SqlOperator.NEQ ? "is not" : "is"} null`
-          )
-        : query.whereRaw(
+      if (olp === SqlLogicalOperator.OR) {
+        query.orWhereRaw(
             `${name} ${filter.op === SqlOperator.NEQ ? "is not" : "is"} null`
           );
+      } else {
+        query.whereRaw(
+            `${name} ${filter.op === SqlOperator.NEQ ? "is not" : "is"} null`
+          );
+      }
     } else {
       if (Array.isArray(value) && !Buffer.isBuffer(value)) {
         if (value.length === 0) return query;
-        olp === SqlLogicalOperator.OR
-          ? query.orWhereRaw(
-              `${name}${filter.op === SqlOperator.NEQ ? " not" : ""} in (${value
-                .map((_) => `?`)
-                .join(",")})`,
-              value
-            )
-          : query.whereRaw(
+        if (olp === SqlLogicalOperator.OR) {
+          query.orWhereRaw(
               `${name}${filter.op === SqlOperator.NEQ ? " not" : ""} in (${value
                 .map((_) => `?`)
                 .join(",")})`,
               value
             );
+        } else {
+          query.whereRaw(
+              `${name}${filter.op === SqlOperator.NEQ ? " not" : ""} in (${value
+                .map((_) => `?`)
+                .join(",")})`,
+              value
+            );
+        }
       } else if (filter.value !== undefined) {
-        if (filter.op === SqlOperator.CONTAINS)
-          olp === SqlLogicalOperator.OR
-            ? query.orWhereRaw(
-                `${name} like '%' || ? || '%'`,
-                value.toString().trim().toLowerCase()
-              )
-            : query.whereRaw(
+        if (filter.op === SqlOperator.CONTAINS) {
+          if (olp === SqlLogicalOperator.OR) {
+            query.orWhereRaw(
                 `${name} like '%' || ? || '%'`,
                 value.toString().trim().toLowerCase()
               );
-        else if (filter.op === SqlOperator.EXISTS) {
+          } else {
+            query.whereRaw(
+                `${name} like '%' || ? || '%'`,
+                value.toString().trim().toLowerCase()
+              );
+          }
+        } else if (filter.op === SqlOperator.EXISTS) {
           const existsFn = (qb: Knex.QueryInterface) =>
             this.applyFilters(
               qb
@@ -188,18 +194,26 @@ export class DbQueryBuilder<
               }
             );
 
-          if (value === true)
-            olp === SqlLogicalOperator.OR
-              ? query.orWhereExists((qb) => existsFn(qb))
-              : query.whereExists((qb) => existsFn(qb));
-          else
-            olp === SqlLogicalOperator.OR
-              ? query.orWhereNotExists((qb) => existsFn(qb))
-              : query.whereNotExists((qb) => existsFn(qb));
-        } else
-          olp === SqlLogicalOperator.OR
-            ? query.orWhereRaw(`${name} ${filter.op || "="} ?`, value)
-            : query.whereRaw(`${name} ${filter.op || "="} ?`, value);
+          if (value === true) {
+            if (olp === SqlLogicalOperator.OR) {
+              query.orWhereExists((qb) => existsFn(qb));
+            } else {
+              query.whereExists((qb) => existsFn(qb));
+            }
+          } else {
+            if (olp === SqlLogicalOperator.OR) {
+              query.orWhereNotExists((qb) => existsFn(qb));
+            } else {
+              query.whereNotExists((qb) => existsFn(qb));
+            }
+          }
+        } else {
+          if (olp === SqlLogicalOperator.OR) {
+            query.orWhereRaw(`${name} ${filter.op || "="} ?`, value);
+          } else {
+            query.whereRaw(`${name} ${filter.op || "="} ?`, value);
+          }
+        }
       }
     }
     return query;
@@ -221,17 +235,8 @@ export class DbQueryBuilder<
         filter.filter.length
       ) {
         const subfilter = filter.filter;
-        olp === SqlLogicalOperator.OR
-          ? query.orWhere((qb) =>
-              this.applyFilters(qb, {
-                filters: subfilter,
-                params,
-                tableName,
-                parent: filter,
-                findParams: params,
-              })
-            )
-          : query.where((qb) =>
+        if (olp === SqlLogicalOperator.OR) {
+          query.orWhere((qb) =>
               this.applyFilters(qb, {
                 filters: subfilter,
                 params,
@@ -240,15 +245,26 @@ export class DbQueryBuilder<
                 findParams: params,
               })
             );
+        } else {
+          query.where((qb) =>
+              this.applyFilters(qb, {
+                filters: subfilter,
+                params,
+                tableName,
+                parent: filter,
+                findParams: params,
+              })
+            );
+        }
       }
     }
     return this;
   }
 
-  protected getJoinInfo(query: Knex.QueryInterface, _input: GetJoinInfoInput) {
+  protected getJoinInfo(_query: Knex.QueryInterface, _input: GetJoinInfoInput) {
     const key = "";
 
-    let fn: (() => typeof query) | null = null as (() => typeof query) | null;
+    const fn: (() => typeof _query) | null = null as (() => typeof _query) | null;
 
     return { key, fn };
   }

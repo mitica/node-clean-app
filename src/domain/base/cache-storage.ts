@@ -16,9 +16,8 @@ type KeyType = (
   | (string | number | boolean | null | undefined)[]
 )[];
 
-/* eslint-disable @typescript-eslint/ban-types */
 export interface CacheStorage {
-  getCacheValue<T = {}>(key: string): Promise<T | undefined>;
+  getCacheValue<T = Record<string, unknown>>(key: string): Promise<T | undefined>;
 
   setCacheValue<T>(key: string, value: T, ttlSeconds: number): Promise<void>;
 
@@ -37,7 +36,7 @@ export interface CacheStorage {
 
 export abstract class BaseCacheStorage implements CacheStorage {
   constructor(private prefix: string) {}
-  abstract getCacheValue<T = {}>(key: string): Promise<T | undefined>;
+  abstract getCacheValue<T = Record<string, unknown>>(key: string): Promise<T | undefined>;
 
   abstract setCacheValue<T>(
     key: string,
