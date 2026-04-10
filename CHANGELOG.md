@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-04-10
+
+### Added
+
+- Vitest testing framework with sample tests for domain utilities
+- ESLint with flat config and typescript-eslint for type-aware linting
+- Prettier with project-level config and VS Code integration
+- `.prettierignore` for excluding build output
+- `yarn test`, `yarn test:watch` scripts
+- `yarn lint`, `yarn lint:fix` scripts
+- `yarn format`, `yarn format:check` scripts
+
+### Changed
+
+- Updated `tsconfig.json` `lib` from `["es2018", "esnext.asynciterable", "DOM"]` to `["ES2022"]`
+- Updated `@types/node` from `^12.0.2` to `^22.0.0`
+- Updated Dockerfile base image from `node:21.7.2-alpine` to `node:22-alpine`
+- Excluded test files (`*.test.ts`) from TypeScript build output
+- Updated `.vscode/settings.json` with Prettier as default formatter and format-on-save
+
+### Fixed
+
+- Replaced ternary-as-statement expressions with proper `if/else` in query builder
+- Replaced deprecated `{}` types with `Record<string, unknown>` in cache storage
+- Removed unnecessary regex escapes in string utilities
+- Removed useless try-catch wrapper in error handler
+- Added `{ cause }` to re-thrown errors in auth middleware
+- Fixed unused variable warnings across codebase
+- Updated stale eslint-disable comments
+
+### Removed
+
+- Deprecated `prettier.tslintIntegration` setting from VS Code config
+- Old ava test runner references
+
 ## [0.2.0] - 2026-01-07
 
 ### Added
@@ -63,6 +98,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Future improvements and features will be documented here
 
+[0.4.0]: https://github.com/mitica/node-clean-app/compare/v0.2.0...v0.4.0
 [0.2.0]: https://github.com/mitica/node-clean-app/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/mitica/node-clean-app/releases/tag/v0.1.0
-[Unreleased]: https://github.com/mitica/node-clean-app/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/mitica/node-clean-app/compare/v0.4.0...HEAD
