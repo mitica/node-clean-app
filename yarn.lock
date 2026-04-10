@@ -84,10 +84,10 @@
     "@eslint/core" "^1.2.1"
     levn "^0.4.1"
 
-"@hono/node-server@^1.19.3":
-  version "1.19.3"
-  resolved "https://registry.yarnpkg.com/@hono/node-server/-/node-server-1.19.3.tgz#f0483de5471b415dce0799a34171c05bfe30a6fd"
-  integrity sha512-Fjyxfux0rMPXMSob79OmddfpK5ArJa2xLkLCV+zamHkbeXQtSNKOi0keiBKyHZ/hCRKjigjmKGp4AJnDFq8PUw==
+"@hono/node-server@^1.19.13":
+  version "1.19.13"
+  resolved "https://registry.yarnpkg.com/@hono/node-server/-/node-server-1.19.13.tgz#4838c766a1237253d4dde3281cf7d5c65186fd32"
+  integrity sha512-TsQLe4i2gvoTtrHje625ngThGBySOgSK3Xo2XRYOdqGN1teR8+I7vchQC46uLJi8OF62YTYA3AhSpumtkhsaKQ==
 
 "@humanfs/core@^0.19.1":
   version "0.19.1"
