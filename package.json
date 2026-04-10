@@ -54,14 +54,15 @@
     "@types/json-schema": "^7.0.15",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/ms": "^2.1.0",
-    "@types/node": "^12.0.2",
+    "@types/node": "^22.0.0",
     "@types/object-hash": "^3.0.6",
     "@types/pg": "^8.15.5",
     "@types/ramda": "^0.31.1",
     "@types/uuid": "^11.0.0",
     "cpx": "^1.5.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vitest": "^4.1.4"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.3",

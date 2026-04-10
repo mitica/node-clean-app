@@ -21,7 +21,7 @@
     "useUnknownInCatchVariables": false,
     "allowJs": false,
     "esModuleInterop": true,
-    "lib": ["es2018", "esnext.asynciterable", "DOM"],
+    "lib": ["ES2022"],
     "forceConsistentCasingInFileNames": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
