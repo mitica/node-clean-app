@@ -5,8 +5,9 @@
   "scripts": {
     "up": "docker-compose up",
     "down": "docker-compose down",
-    "down-up": "docker-compose down && docker volume rm api_node_modules && yarn build && docker-compose up",
-    "dev": "docker-compose up && nodemon",
+    "down-up": "docker-compose down -v && yarn build && docker-compose up",
+    "dev": "docker-compose up",
+    "dev:server": "npx nodemon",
     "clean": "rm -rf dist",
     "build": "yarn clean && yarn tsc --project ./tsconfig.json && yarn copy-files",
     "copy-files": "./node_modules/.bin/cpx \"src/**/*.{json,html,csv,tsv,json,png,jpg,md}\" dist",

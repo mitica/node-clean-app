@@ -3,9 +3,9 @@ import { createTestContext, cleanTables } from "../../tests/db-helpers";
 import { UserRole } from "../../domain/entity/user";
 import type { UserRepository } from "../../domain/repository/user-repository";
 import { AppContext } from "../../config";
+import { generateTokenPair } from "../services/jwt";
 
-const fakePasswordHash = "$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ012";
-
+let fakePasswordHash = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 let userRepo: UserRepository;
 let ctx: AppContext;
 

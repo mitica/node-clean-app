@@ -3,12 +3,9 @@ FROM node:22-alpine
 # Set app directory
 WORKDIR /usr/src/app
 
-# Install git in order to allow installing
-# npm packages from Github
-RUN set -xe \
-    && apk add --no-cache git
-
-RUN apk update && apk add --no-cache \
+# Install system dependencies
+RUN apk add --no-cache \
+    git \
     bash \
     curl \
     wget \
@@ -16,11 +13,7 @@ RUN apk update && apk add --no-cache \
     gcompat
 
 # Install app dependencies
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-# where available (npm@5+)
-COPY package*.json ./
-COPY yarn.lock ./
-COPY tsconfig*.json ./
+COPY package*.json yarn.lock tsconfig*.json ./
 
 RUN yarn
 
@@ -29,6 +22,6 @@ COPY . .
 
 ENV NODE_ENV development
 
-EXPOSE 8000
+EXPOSE 3000
 
-CMD ["yarn","start-inside-docker"]
+CMD ["yarn", "dev:server"]
